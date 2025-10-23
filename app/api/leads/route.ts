@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { storage } from '@/lib/storage'
 import { z } from 'zod'
 
 const leadSchema = z.object({
@@ -18,12 +18,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = leadSchema.parse(body)
 
-    const lead = await prisma.lead.create({
-      data: {
-        ...data,
-        status: 'NEW',
-      },
-    })
+    const lead = storage.createLead(data)
 
     return NextResponse.json({ success: true, lead })
   } catch (error) {
@@ -48,20 +43,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const micrositeId = searchParams.get('micrositeId')
 
-    const leads = await prisma.lead.findMany({
-      where: micrositeId ? { micrositeId } : {},
-      orderBy: { createdAt: 'desc' },
-      include: {
-        microsite: {
-          select: {
-            targetCompanyName: true,
-            slug: true,
-          },
-        },
-      },
-    })
+    let leads = storage.getLeads()
 
-    return NextResponse.json({ success: true, leads })
+    if (micrositeId) {
+      leads = leads.filter(l => l.micrositeId === micrositeId)
+    }
+
+    // Add microsite info
+    const leadsWithMicrosite = leads.map(lead => ({
+      ...lead,
+      microsite: {
+        targetCompanyName: storage.getMicrositeById(lead.micrositeId)?.targetCompanyName || 'Unknown',
+        slug: storage.getMicrositeById(lead.micrositeId)?.slug || '',
+      },
+    }))
+
+    return NextResponse.json({ success: true, leads: leadsWithMicrosite })
   } catch (error) {
     console.error('Error fetching leads:', error)
     return NextResponse.json(

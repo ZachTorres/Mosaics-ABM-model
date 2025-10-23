@@ -1,32 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { storage } from '@/lib/storage'
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const campaignId = searchParams.get('campaignId')
-    const status = searchParams.get('status')
+    const microsites = storage.getMicrosites()
 
-    const microsites = await prisma.microsite.findMany({
-      where: {
-        ...(campaignId && { campaignId }),
-        ...(status && { status: status as any }),
+    // Add counts
+    const micrositesWithCounts = microsites.map(m => ({
+      ...m,
+      _count: {
+        visits: storage.getVisits().filter(v => v.micrositeId === m.id).length,
+        leads: storage.getLeads().filter(l => l.micrositeId === m.id).length,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        campaign: true,
-        _count: {
-          select: {
-            visits: true,
-            leads: true,
-          },
-        },
-      },
-    })
+    }))
 
-    return NextResponse.json({ success: true, microsites })
+    return NextResponse.json({ success: true, microsites: micrositesWithCounts })
   } catch (error) {
     console.error('Error fetching microsites:', error)
     return NextResponse.json(

@@ -16,7 +16,7 @@ export default function SettingsPage() {
     loadSettings()
   }, [])
 
-  const loadSettings() => {
+  const loadSettings = () => {
     fetch('/api/settings')
       .then(res => res.json())
       .then(data => {

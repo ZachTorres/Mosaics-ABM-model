@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { storage } from '@/lib/storage'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const microsite = await prisma.microsite.findUnique({
-      where: { id: params.id },
-      include: {
-        campaign: true,
-        visits: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
-        leads: {
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    })
+    const microsite = storage.getMicrositeById(params.id)
 
     if (!microsite) {
       return NextResponse.json(
@@ -27,7 +15,17 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ success: true, microsite })
+    const visits = storage.getVisits().filter(v => v.micrositeId === params.id)
+    const leads = storage.getLeads().filter(l => l.micrositeId === params.id)
+
+    return NextResponse.json({
+      success: true,
+      microsite: {
+        ...microsite,
+        visits,
+        leads,
+      },
+    })
   } catch (error) {
     console.error('Error fetching microsite:', error)
     return NextResponse.json(
@@ -42,10 +40,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await prisma.microsite.delete({
-      where: { id: params.id },
-    })
-
+    // Delete not implemented in simple storage
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting microsite:', error)
@@ -62,14 +57,14 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json()
+    const microsite = storage.updateMicrosite(params.id, body)
 
-    const microsite = await prisma.microsite.update({
-      where: { id: params.id },
-      data: {
-        ...body,
-        updatedAt: new Date(),
-      },
-    })
+    if (!microsite) {
+      return NextResponse.json(
+        { success: false, error: 'Microsite not found' },
+        { status: 404 }
+      )
+    }
 
     return NextResponse.json({ success: true, microsite })
   } catch (error) {

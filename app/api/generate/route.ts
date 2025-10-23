@@ -1,56 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { scrapeCompanyWebsite } from '@/lib/scraper'
-import { generatePersonalizedContent } from '@/lib/ai-generator'
+import { storage } from '@/lib/storage'
+import { scrapeCompanyWebsite } from '@/lib/simple-scraper'
+import { generatePersonalizedContent } from '@/lib/simple-ai'
 import { generateSlug } from '@/lib/utils'
 import { getAppUrl } from '@/lib/env'
 import { z } from 'zod'
 
 const generateSchema = z.object({
   targetUrl: z.string().url(),
-  campaignId: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { targetUrl, campaignId } = generateSchema.parse(body)
+    const { targetUrl } = generateSchema.parse(body)
 
     // Step 1: Scrape company website
     console.log('Scraping website:', targetUrl)
     const companyData = await scrapeCompanyWebsite(targetUrl)
 
-    // Step 2: Generate personalized content using AI
+    // Step 2: Generate personalized content (uses AI if configured, templates otherwise)
     console.log('Generating personalized content for:', companyData.name)
     const personalizedContent = await generatePersonalizedContent(companyData)
 
-    // Step 3: Create microsite in database
+    // Step 3: Save microsite to file storage
     const slug = generateSlug(companyData.name)
 
-    const microsite = await prisma.microsite.create({
-      data: {
-        slug,
-        campaignId: campaignId || null,
-        targetCompanyName: companyData.name,
-        targetCompanyUrl: targetUrl,
-        targetIndustry: companyData.industry,
-        targetCompanySize: companyData.companySize,
-        companyDescription: companyData.description,
-        techStack: companyData.techStack,
-        painPoints: companyData.painPoints,
-        headline: personalizedContent.headline,
-        subheadline: personalizedContent.subheadline,
-        valuePropositions: personalizedContent.valuePropositions,
-        customContent: {
-          customPitch: personalizedContent.customPitch,
-          cta: personalizedContent.cta,
-          logo: companyData.logo,
-          metadata: companyData.metadata,
-        },
-        recommendedSolutions: personalizedContent.recommendedSolutions,
-        status: 'PUBLISHED',
-        publishedAt: new Date(),
+    const microsite = storage.createMicrosite({
+      slug,
+      targetCompanyName: companyData.name,
+      targetCompanyUrl: targetUrl,
+      targetIndustry: companyData.industry,
+      targetCompanySize: companyData.companySize,
+      companyDescription: companyData.description,
+      techStack: companyData.techStack,
+      painPoints: companyData.painPoints,
+      headline: personalizedContent.headline,
+      subheadline: personalizedContent.subheadline,
+      valuePropositions: personalizedContent.valuePropositions,
+      customContent: {
+        customPitch: personalizedContent.customPitch,
+        cta: personalizedContent.cta,
+        logo: companyData.logo,
+        metadata: companyData.metadata,
       },
+      recommendedSolutions: personalizedContent.recommendedSolutions,
+      status: 'PUBLISHED',
+      publishedAt: new Date().toISOString(),
     })
 
     return NextResponse.json({
