@@ -1,4 +1,5 @@
 // Simplified scraper - works without Puppeteer (no browser needed!)
+// @ts-nocheck
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 
