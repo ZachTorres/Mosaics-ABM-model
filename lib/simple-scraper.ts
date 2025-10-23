@@ -54,7 +54,7 @@ export async function scrapeCompanyWebsite(url: string): Promise<CompanyData> {
       `https://logo.clearbit.com/${domain}`
 
     const html = response.data.toLowerCase()
-    const text = $.text().toLowerCase()
+    const text = $('body').text().toLowerCase()
 
     return {
       name: companyName,
@@ -117,7 +117,7 @@ function detectIndustry(text: string): string {
 }
 
 function estimateSize($: cheerio.CheerioAPI): string {
-  const text = $.text().toLowerCase()
+  const text = $('body').text().toLowerCase()
   const navItems = $('nav a, header a').length
 
   if (text.includes('enterprise') || navItems > 20) {
