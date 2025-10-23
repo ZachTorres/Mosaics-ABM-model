@@ -1,14 +1,21 @@
 // Simple file-based storage - no database required!
 // Data persists in JSON files during the session
+// Uses /tmp on Vercel which is writable in serverless functions
 
 import fs from 'fs'
 import path from 'path'
+import os from 'os'
 
-const DATA_DIR = path.join(process.cwd(), '.data')
+// Use /tmp directory on Vercel/serverless, .data locally
+const DATA_DIR = process.env.VERCEL ? path.join(os.tmpdir(), 'mosaic-data') : path.join(process.cwd(), '.data')
 
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true })
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true })
+  }
+} catch (error) {
+  console.error('Error creating data directory:', error)
 }
 
 interface Microsite {
@@ -78,9 +85,15 @@ function readJSON<T>(filename: string, defaultValue: T): T {
 function writeJSON(filename: string, data: any): void {
   const filepath = path.join(DATA_DIR, filename)
   try {
+    // Ensure directory exists before writing
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true })
+    }
     fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf-8')
+    console.log(`Successfully wrote ${filename}`)
   } catch (error) {
     console.error(`Error writing ${filename}:`, error)
+    throw error // Re-throw so API can handle it
   }
 }
 
