@@ -16,18 +16,17 @@ console.log('isProduction:', isProduction)
 console.log('DATA_DIR:', DATA_DIR)
 console.log('tmpdir:', os.tmpdir())
 
-// Ensure data directory exists
-try {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true })
-    console.log('Created data directory:', DATA_DIR)
-  } else {
-    console.log('Data directory exists:', DATA_DIR)
+// Function to ensure directory exists (called when needed, not at import time)
+function ensureDataDir() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true })
+      console.log('Created data directory:', DATA_DIR)
+    }
+  } catch (error) {
+    console.error('Error ensuring data directory:', error)
+    // Don't throw - we'll handle errors in individual operations
   }
-} catch (error) {
-  console.error('FATAL: Error creating data directory:', error)
-  console.error('Attempted path:', DATA_DIR)
-  throw error
 }
 
 interface Microsite {
@@ -95,12 +94,9 @@ function readJSON<T>(filename: string, defaultValue: T): T {
 }
 
 function writeJSON(filename: string, data: any): void {
+  ensureDataDir() // Make sure directory exists
   const filepath = path.join(DATA_DIR, filename)
   try {
-    // Ensure directory exists before writing
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true })
-    }
     fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf-8')
     console.log(`Successfully wrote ${filename}`)
   } catch (error) {
