@@ -1,0 +1,25 @@
+LOGO PLACEHOLDER
+================
+
+Replace the mosaic-logo.png file with the actual Mosaic Corporation logo.
+
+Recommended specifications:
+- Format: PNG with transparent background
+- Dimensions: 600x160 pixels (or similar ratio)
+- File size: < 100KB
+- High resolution for retina displays
+
+You can download the official Mosaic logo from:
+https://mosaiccorp.com
+
+Once you have the logo:
+1. Delete mosaic-logo.png
+2. Add your logo as mosaic-logo.png in this /public directory
+3. Delete this LOGO_PLACEHOLDER.txt file
+
+The logo will appear:
+- In the microsite header
+- On the landing page
+- In the dashboard
+
+For now, the system will gracefully handle the missing logo by hiding the image element.
