@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma'
+import { storage } from '@/lib/storage'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Analytics } from '@/components/Analytics'
@@ -12,9 +12,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const microsite = await prisma.microsite.findUnique({
-    where: { slug: params.slug },
-  })
+  const microsite = storage.getMicrositeBySlug(params.slug)
 
   if (!microsite) {
     return {
@@ -29,9 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function MicrositePage({ params }: PageProps) {
-  const microsite = await prisma.microsite.findUnique({
-    where: { slug: params.slug },
-  })
+  const microsite = storage.getMicrositeBySlug(params.slug)
 
   if (!microsite || microsite.status !== 'PUBLISHED') {
     notFound()
