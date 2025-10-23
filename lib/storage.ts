@@ -6,16 +6,28 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-// Use /tmp directory on Vercel/serverless, .data locally
-const DATA_DIR = process.env.VERCEL ? path.join(os.tmpdir(), 'mosaic-data') : path.join(process.cwd(), '.data')
+// ALWAYS use /tmp in production (Vercel uses NODE_ENV=production)
+const isProduction = process.env.NODE_ENV === 'production'
+const DATA_DIR = isProduction ? '/tmp/mosaic-data' : path.join(process.cwd(), '.data')
+
+console.log('=== Storage Config ===')
+console.log('NODE_ENV:', process.env.NODE_ENV)
+console.log('isProduction:', isProduction)
+console.log('DATA_DIR:', DATA_DIR)
+console.log('tmpdir:', os.tmpdir())
 
 // Ensure data directory exists
 try {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true })
+    console.log('Created data directory:', DATA_DIR)
+  } else {
+    console.log('Data directory exists:', DATA_DIR)
   }
 } catch (error) {
-  console.error('Error creating data directory:', error)
+  console.error('FATAL: Error creating data directory:', error)
+  console.error('Attempted path:', DATA_DIR)
+  throw error
 }
 
 interface Microsite {
