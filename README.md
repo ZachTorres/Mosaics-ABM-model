@@ -1,6 +1,10 @@
 # Mosaic ABM Platform
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ZachTorres/Mosaics-ABM-model)
+
 A high-end, AI-powered Account-Based Marketing (ABM) microsite generator for Mosaic Corporation. Create personalized, conversion-focused microsites for target accounts in under 60 seconds.
+
+**🚀 [One-Click Deploy Guide](DEPLOY_NOW.md)** | **📖 [Full Documentation](#getting-started)**
 
 ## 🎯 Overview
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { scrapeCompanyWebsite } from '@/lib/scraper'
 import { generatePersonalizedContent } from '@/lib/ai-generator'
 import { generateSlug } from '@/lib/utils'
+import { getAppUrl } from '@/lib/env'
 import { z } from 'zod'
 
 const generateSchema = z.object({
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       microsite: {
         id: microsite.id,
         slug: microsite.slug,
-        url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/m/${microsite.slug}`,
+        url: `${getAppUrl()}/m/${microsite.slug}`,
       },
     })
   } catch (error) {
