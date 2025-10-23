@@ -1,4 +1,4 @@
-import { storage } from '@/lib/storage'
+import { storage } from '@/lib/memory-storage'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Analytics } from '@/components/Analytics'

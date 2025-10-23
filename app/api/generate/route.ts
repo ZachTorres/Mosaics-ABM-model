@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { storage } from '@/lib/storage'
+import { storage } from '@/lib/memory-storage'
 import { scrapeCompanyWebsite } from '@/lib/simple-scraper'
 import { generatePersonalizedContent } from '@/lib/simple-ai'
 import { generateSlug } from '@/lib/utils'
