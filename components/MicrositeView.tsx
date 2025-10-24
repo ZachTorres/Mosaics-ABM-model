@@ -242,7 +242,7 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
                         value={contactForm.firstName}
                         onChange={(e) => updateContactForm('firstName', e.target.value)}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="First Name *"
+                        placeholder="First Name"
                         required
                         disabled={submitting}
                       />
@@ -253,7 +253,7 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
                         value={contactForm.lastName}
                         onChange={(e) => updateContactForm('lastName', e.target.value)}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="Last Name *"
+                        placeholder="Last Name"
                         required
                         disabled={submitting}
                       />
@@ -267,7 +267,7 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
                         value={contactForm.email}
                         onChange={(e) => updateContactForm('email', e.target.value)}
                         className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="Email Address *"
+                        placeholder="Email Address"
                         required
                         disabled={submitting}
                       />
