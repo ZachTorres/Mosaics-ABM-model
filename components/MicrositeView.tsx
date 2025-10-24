@@ -176,112 +176,29 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
           </div>
 
 
-          {/* Contact Form */}
+          {/* Book a Demo CTA */}
           {showContactForm && (
             <div id="contact-form" className="border-t border-gray-200 pt-16 mt-4">
               <div className="text-center mb-10">
                 <h2 className="text-2xl font-light text-gray-800 mb-3">
                   {microsite.cta}
                 </h2>
-                <p className="text-gray-600">
-                  We'd be happy to discuss how we might be able to help
+                <p className="text-gray-600 mb-8">
+                  Schedule a personalized demo with our team
                 </p>
+
+                <a
+                  href="https://outlook.office.com/bookwithme/user/28482ab4ec684e649a3667356522a06e%40mosaiccorp.com?anonymous&ismsaljsauthenabled=true"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-12 py-4 text-white text-lg font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  style={{
+                    background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
+                  }}
+                >
+                  Book Your Demo Now
+                </a>
               </div>
-
-              {submitSuccess ? (
-                <div className="max-w-2xl mx-auto bg-green-50 border-2 border-green-200 rounded-xl p-8 text-center">
-                  <svg className="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <h3 className="text-2xl font-bold text-green-900 mb-2">
-                    Thank You!
-                  </h3>
-                  <p className="text-green-700 text-lg">
-                    We'll be in touch shortly to discuss your needs.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleContactSubmit} className="max-w-2xl mx-auto space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <input
-                        type="text"
-                        value={contactForm.firstName}
-                        onChange={(e) => updateContactForm('firstName', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="First Name"
-                        required
-                        disabled={submitting}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="text"
-                        value={contactForm.lastName}
-                        onChange={(e) => updateContactForm('lastName', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="Last Name"
-                        required
-                        disabled={submitting}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <input
-                        type="email"
-                        value={contactForm.email}
-                        onChange={(e) => updateContactForm('email', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="Email Address"
-                        required
-                        disabled={submitting}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="tel"
-                        value={contactForm.phone}
-                        onChange={(e) => updateContactForm('phone', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        placeholder="Phone Number"
-                        disabled={submitting}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <textarea
-                      value={contactForm.currentProblem}
-                      onChange={(e) => updateContactForm('currentProblem', e.target.value)}
-                      rows={4}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
-                      placeholder="Tell us about your biggest workflow challenge..."
-                      disabled={submitting}
-                    />
-                  </div>
-
-                  {submitError && (
-                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                      <p className="text-red-700 text-center">{submitError}</p>
-                    </div>
-                  )}
-
-                  <div className="text-center">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="px-10 py-4 text-white text-lg font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                      style={{
-                        background: submitting ? '#9CA3AF' : `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
-                      }}
-                    >
-                      {submitting ? 'Sending...' : 'Request a Demo'}
-                    </button>
-                  </div>
-                </form>
-              )}
             </div>
           )}
         </div>
