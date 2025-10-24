@@ -66,6 +66,14 @@ export default function Home() {
       }
 
       setMicrosite(data.microsite)
+
+      // Scroll to microsite after a brief delay to allow rendering
+      setTimeout(() => {
+        const micrositeElement = document.getElementById('microsite-container')
+        if (micrositeElement) {
+          micrositeElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.')
     } finally {
@@ -200,7 +208,7 @@ export default function Home() {
 
         {/* Microsite Display */}
         {microsite && (
-          <div className="max-w-6xl mx-auto">
+          <div id="microsite-container" className="max-w-6xl mx-auto">
             {/* Save & Share Bar with blue theme */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl shadow-2xl p-8 mb-8">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6">
