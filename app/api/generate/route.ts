@@ -1032,7 +1032,7 @@ function generateMosaicSolution(companyData: CompanyData) {
     pitch = `We help companies like yours spend less time on paperwork and manual processes.`
   }
 
-  const cta = `See How ${name} Can Save Time & Money`
+  const cta = `Get Your Free ${name} Workflow Analysis`
 
   return {
     companyName: name,
