@@ -118,7 +118,7 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
       >
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-sm uppercase tracking-widest opacity-90 mb-6 font-semibold">
-            A Personalized Overview for {microsite.companyName}
+            Mosaic Built This for {microsite.companyName}
           </p>
           <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight tracking-tight">
             {microsite.headline}
@@ -135,10 +135,10 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
           {/* Introduction */}
           <div className="text-center mb-16">
             <h2 className="text-2xl md:text-3xl font-light text-gray-800 mb-4">
-              How We Can Help
+              How Mosaic Can Help {microsite.companyName}
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              We've worked with organizations facing similar opportunities. Here's what might be relevant for {microsite.companyName}.
+              Mosaic has partnered with {microsite.industry.toLowerCase()} companies facing similar challenges. Here's how we can help {microsite.companyName} transform document workflows.
             </p>
           </div>
 
@@ -185,7 +185,7 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
                 </h2>
 
                 <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Book a personalized demo to see how our workflow automation solutions can transform operations at {microsite.companyName}
+                  Book a personalized demo to see how Mosaic's workflow automation solutions can transform operations at {microsite.companyName}
                 </p>
 
                 <a

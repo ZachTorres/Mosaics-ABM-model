@@ -997,44 +997,44 @@ function generateMosaicSolution(companyData: CompanyData) {
         painPoints.push(`As ${name} scales globally, manual contract management and approval workflows across departments create bottlenecks that slow deal velocity`)
         painPoints.push(`Customer onboarding documents—MSAs, SOWs, technical specs—require coordination between sales, legal, and engineering, often delaying time-to-value`)
         painPoints.push(`${name}'s development and product teams generate extensive documentation that needs instant access across time zones, yet version control and search remain challenging`)
-        solutions.push(`Epicor ECM gives ${name}'s global teams instant access to contracts, technical docs, and customer files with advanced search, automated versioning, and role-based permissions`)
-        solutions.push(`Automated routing moves ${name}'s customer agreements through approval chains in hours instead of weeks, accelerating revenue recognition and improving customer experience`)
+        solutions.push(`Mosaic's Epicor ECM gives ${name}'s global teams instant access to contracts, technical docs, and customer files with advanced search, automated versioning, and role-based permissions`)
+        solutions.push(`Mosaic's automated routing moves ${name}'s customer agreements through approval chains in hours instead of weeks, accelerating revenue recognition and improving customer experience`)
       } else {
         painPoints.push(`${name}'s rapid growth means more customer contracts, vendor agreements, and internal documents—manual filing systems can't keep pace`)
         painPoints.push(`Engineering documentation, product specs, and customer implementations are scattered across email, shared drives, and individual computers, making knowledge sharing difficult`)
         painPoints.push(`As ${name} adds team members, ensuring everyone can find the right document version becomes increasingly time-consuming and error-prone`)
         solutions.push(`Mosaic's Epicor ECM centralizes ${name}'s critical documents in one searchable repository, ensuring your growing team always finds the latest version instantly`)
-        solutions.push(`Automated workflows route ${name}'s contracts and approvals to the right people automatically, eliminating manual tracking and reducing approval time by 70%`)
+        solutions.push(`Mosaic's automated workflows route ${name}'s contracts and approvals to the right people automatically, eliminating manual tracking and reducing approval time by 70%`)
       }
       console.log(`   ✓ Generated technology company-specific pain points`)
     } else if (industry === 'Energy' || industry === 'Utilities' || businessContext.mainServices.some(s => s.toLowerCase().includes('energy') || s.toLowerCase().includes('power') || s.toLowerCase().includes('grid'))) {
       painPoints.push(`${name} coordinates complex energy operations across multiple regions, likely managing vast amounts of operational data, compliance reports, and coordination documents manually`)
       painPoints.push(`Real-time grid management and forecasting at ${name} generates continuous documentation flows—outage reports, capacity planning documents, regulatory filings—that require rapid routing and approval`)
       painPoints.push(`With interconnected operations spanning multiple states and utilities, ${name} needs seamless document sharing and workflow coordination to maintain grid reliability and regulatory compliance`)
-      solutions.push(`Epicor ECM centralizes ${name}'s operational documents—from grid status reports to regulatory compliance filings—enabling instant access across regions with role-based security and audit trails`)
-      solutions.push(`Automated workflow routing ensures ${name}'s critical operational documents move through approval chains without delays, maintaining the rapid response times essential for grid management`)
+      solutions.push(`Mosaic's Epicor ECM centralizes ${name}'s operational documents—from grid status reports to regulatory compliance filings—enabling instant access across regions with role-based security and audit trails`)
+      solutions.push(`Mosaic's automated workflow routing ensures ${name}'s critical operational documents move through approval chains without delays, maintaining the rapid response times essential for grid management`)
       console.log(`   ✓ Generated energy/utilities industry-specific pain points`)
     } else if (industry === 'Government' || industry === 'Public Sector' || businessContext.mainServices.some(s => s.toLowerCase().includes('government') || s.toLowerCase().includes('public'))) {
       painPoints.push(`${name} manages extensive documentation requirements across multiple departments and jurisdictions, with strict compliance and public records obligations`)
       painPoints.push(`Public records requests and FOIA compliance at ${name} require tracking documents across departments—time-consuming manual searches strain resources and delay responses`)
       painPoints.push(`Multi-level approval processes and complex retention requirements mean ${name}'s staff spend significant time managing document workflows instead of mission-critical work`)
-      solutions.push(`Epicor ECM provides ${name} with centralized document management and automated retention policies that ensure compliance while reducing administrative burden`)
-      solutions.push(`Automated workflow routing and complete audit trails help ${name} respond to public records requests quickly while maintaining transparency and accountability`)
+      solutions.push(`Mosaic's Epicor ECM provides ${name} with centralized document management and automated retention policies that ensure compliance while reducing administrative burden`)
+      solutions.push(`Mosaic's automated workflow routing and complete audit trails help ${name} respond to public records requests quickly while maintaining transparency and accountability`)
       console.log(`   ✓ Generated government/public sector-specific pain points`)
     } else if (industry === 'Retail') {
       painPoints.push(`${name} handles high volumes of purchase orders, invoices, and supplier agreements—manual processing creates payment delays and makes it difficult to negotiate better terms`)
       painPoints.push(`Inventory and merchandising documentation scattered across systems makes it hard for ${name}'s buying teams to quickly access product specs, vendor contracts, and pricing history`)
       painPoints.push(`Seasonal spikes in order volume overwhelm ${name}'s manual document workflows, creating fulfillment delays that impact customer satisfaction during peak periods`)
-      solutions.push(`Epicor IDC automatically captures and routes ${name}'s supplier invoices and POs, matching documents to purchase orders and flagging discrepancies—reducing AP processing time by 75%`)
-      solutions.push(`Centralized document access means ${name}'s merchandising and operations teams find vendor contracts, product specs, and compliance documents in seconds, not hours`)
+      solutions.push(`Mosaic's Epicor IDC automatically captures and routes ${name}'s supplier invoices and POs, matching documents to purchase orders and flagging discrepancies—reducing AP processing time by 75%`)
+      solutions.push(`Mosaic's centralized document access means ${name}'s merchandising and operations teams find vendor contracts, product specs, and compliance documents in seconds, not hours`)
       console.log(`   ✓ Generated retail-specific pain points`)
     } else if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
       // Only use invoice pain points if finance is detected
       painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
       painPoints.push(`Paper invoices arriving via email, fax, and mail make it nearly impossible to track approval status or prevent duplicate payments—forcing staff to manually chase down documents`)
 
-      solutions.push(`Epicor IDC automatically captures invoice data from any format (paper, email, PDF) and intelligently routes them through approval workflows—eliminating 90% of manual data entry`)
-      solutions.push(`Gain instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that help organizations reduce AP processing time by up to 75%`)
+      solutions.push(`Mosaic's Epicor IDC automatically captures invoice data from any format (paper, email, PDF) and intelligently routes them through approval workflows—eliminating 90% of manual data entry`)
+      solutions.push(`Mosaic provides instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that reduce AP processing time by up to 75%`)
       console.log(`   ✓ Generated finance/AP-specific pain points`)
     } else {
       // Ultimate fallback for any other industry - document management focus with variety based on size
@@ -1042,7 +1042,7 @@ function generateMosaicSolution(companyData: CompanyData) {
       if (sizeBasedVariation === 0) {
         painPoints.push(`${name}'s operations generate significant documentation that requires coordination across teams—manual processes create bottlenecks and limit operational visibility`)
         painPoints.push(`Document version confusion means ${name}'s teams sometimes work from outdated information, leading to errors, rework, and compliance risks`)
-        solutions.push(`Epicor ECM provides ${name} with a single, cloud-accessible repository for all operational documents—searchable in seconds with role-based security and automatic version control`)
+        solutions.push(`Mosaic's Epicor ECM provides ${name} with a single, cloud-accessible repository for all operational documents—searchable in seconds with role-based security and automatic version control`)
       } else if (sizeBasedVariation === 1) {
         painPoints.push(`${name}'s teams spend hours each week searching for documents across email, shared drives, and local folders—time that could be spent on higher-value work`)
         painPoints.push(`Manual document routing and approvals mean ${name}'s critical processes take longer than necessary, impacting customer responsiveness and operational agility`)
@@ -1050,7 +1050,7 @@ function generateMosaicSolution(companyData: CompanyData) {
       } else {
         painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
         painPoints.push(`Remote and hybrid work make document access even more challenging for ${name}—emails asking "where's that file?" waste time and frustrate employees`)
-        solutions.push(`Cloud-based Epicor ECM gives ${name}'s distributed teams secure, instant access to all documents from anywhere, with advanced search that finds files in seconds`)
+        solutions.push(`Mosaic's cloud-based Epicor ECM gives ${name}'s distributed teams secure, instant access to all documents from anywhere, with advanced search that finds files in seconds`)
       }
       console.log(`   ✓ Generated general operational pain points (variation ${sizeBasedVariation})`)
     }
@@ -1059,18 +1059,18 @@ function generateMosaicSolution(companyData: CompanyData) {
   // Additional pain point for order-heavy operations (if detected)
   if (businessContext.keyOperations.includes('Order Management') && painPoints.length < 4) {
     painPoints.push(`Manual sales order entry at ${name} creates delays between order receipt and fulfillment, directly impacting customer satisfaction and your order-to-cash cycle`)
-    solutions.push(`Epicor IDC intelligently captures order data from any source (email, EDI, fax), validates against business rules, and auto-populates your ERP—reducing order processing time by 96%`)
+    solutions.push(`Mosaic's Epicor IDC intelligently captures order data from any source (email, EDI, fax), validates against business rules, and auto-populates your ERP—reducing order processing time by 96%`)
   }
 
   // ERP Integration - detailed and technology-specific
   if (hasMicrosoftTech) {
     solutions.push(`Proven Microsoft Dynamics Integration: Mosaic's deep expertise with Dynamics 365 Business Central ensures seamless two-way synchronization between ${name}'s Epicor workflows and financial systems`)
   } else if (hasSYSPROTech) {
-    solutions.push(`Native SYSPRO Integration: Specialized connectors sync ${name}'s Epicor documents with SYSPRO ERP in real-time—AP invoices, sales orders, and inventory documents flow automatically`)
+    solutions.push(`Native SYSPRO Integration: Mosaic's specialized connectors sync ${name}'s Epicor documents with SYSPRO ERP in real-time—AP invoices, sales orders, and inventory documents flow automatically`)
   } else if (hasSageTech) {
-    solutions.push(`Certified Sage Intacct Integration: Epicor connects directly to ${name}'s Sage Intacct, automatically syncing AP invoices, vendor records, and GL coding with zero double-entry`)
+    solutions.push(`Certified Sage Intacct Integration: Mosaic's Epicor connects directly to ${name}'s Sage Intacct, automatically syncing AP invoices, vendor records, and GL coding with zero double-entry`)
   } else if (hasSAPTech) {
-    solutions.push(`SAP-Certified Integration: Epicor integrates seamlessly with ${name}'s SAP environment, syncing documents and master data across enterprise systems with proven reliability`)
+    solutions.push(`SAP-Certified Integration: Mosaic's Epicor integrates seamlessly with ${name}'s SAP environment, syncing documents and master data across enterprise systems with proven reliability`)
   } else if (hasOtherERP) {
     solutions.push(`ERP Integration Expertise: With 25+ years in automation, Mosaic connects Epicor to ${name}'s ERP (NetSuite, QuickBooks, or others) through proven APIs that eliminate double-entry`)
   } else {
@@ -1080,16 +1080,16 @@ function generateMosaicSolution(companyData: CompanyData) {
   // Industry-specific - detailed and valuable
   if (industry === 'Healthcare') {
     painPoints.push(`HIPAA regulations require ${name} to meticulously document who accessed patient records, when, and why—something manual processes simply cannot deliver reliably`)
-    solutions.push(`Healthcare-compliant workflows ensure ${name} meets HIPAA requirements with encrypted storage, role-based access, automatic audit logging, and patient consent tracking built in`)
+    solutions.push(`Mosaic's healthcare-compliant workflows ensure ${name} meets HIPAA requirements with encrypted storage, role-based access, automatic audit logging, and patient consent tracking built in`)
   } else if (industry === 'Manufacturing') {
     painPoints.push(`${name}'s manufacturing operations generate constant document flows—POs, packing slips, quality certs, BOMs—that must move rapidly through approvals to prevent production delays`)
-    solutions.push(`Freight & Logistics Automation processes ${name}'s shipping documents instantly, auto-matching POs to receipts, flagging discrepancies, and updating inventory systems in real-time`)
+    solutions.push(`Mosaic's Freight & Logistics Automation processes ${name}'s shipping documents instantly, auto-matching POs to receipts, flagging discrepancies, and updating inventory systems in real-time`)
   } else if (industry === 'Financial Services') {
     painPoints.push(`${name} operates under strict regulatory scrutiny requiring perfect document retention, immutable audit trails, and instant retrieval during examinations`)
-    solutions.push(`Bank-grade security with encryption at rest and in transit, immutable audit trails, granular permissions, and automated retention policies that enforce ${name}'s regulatory compliance`)
+    solutions.push(`Mosaic provides bank-grade security with encryption at rest and in transit, immutable audit trails, granular permissions, and automated retention policies that enforce ${name}'s regulatory compliance`)
   } else if (industry === 'Education') {
     painPoints.push(`${name} manages student records, enrollment forms, financial aid documents, and compliance paperwork across departments—creating silos that make it difficult to serve students efficiently`)
-    solutions.push(`Centralized student document repository with secure, role-based access lets ${name}'s advisors, financial aid, and registrar staff collaborate while protecting student privacy`)
+    solutions.push(`Mosaic's centralized student document repository with secure, role-based access lets ${name}'s advisors, financial aid, and registrar staff collaborate while protecting student privacy`)
   }
 
   // Thoughtful fallbacks that still show value
@@ -1112,14 +1112,14 @@ function generateMosaicSolution(companyData: CompanyData) {
   console.log(`✨ Generated headline: "${headline}"`)
   console.log(`✨ Generated for company: ${name}, Industry: ${industry}`)
 
-  // Create industry-aware, personalized subheadline
+  // Create industry-aware, personalized subheadline with Mosaic branding
   let pitch = ''
   if (industry && industry !== 'Business Services') {
-    pitch = `We work with ${industry.toLowerCase()} companies to reduce paperwork and manual processes.`
+    pitch = `Mosaic partners with ${industry.toLowerCase()} companies to eliminate manual document processes and streamline workflows.`
   } else if (businessContext.mainServices.length > 0 && businessContext.mainServices[0] !== 'Business Services') {
-    pitch = `We help companies in ${businessContext.mainServices[0].toLowerCase()} spend less time on administrative work.`
+    pitch = `Mosaic helps companies in ${businessContext.mainServices[0].toLowerCase()} spend less time on administrative work and more time driving growth.`
   } else {
-    pitch = `We help companies like yours spend less time on paperwork and manual processes.`
+    pitch = `Mosaic specializes in helping companies like ${name} automate document workflows and eliminate manual processes.`
   }
 
   const cta = `See Mosaic in Action for ${name}`
