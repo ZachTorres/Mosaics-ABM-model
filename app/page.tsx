@@ -252,3 +252,10 @@ export default function Home() {
             </div>
 
             {/* Microsite Component */}
+            <MicrositeView microsite={microsite} showContactForm={true} onContactSubmit={handleContactSubmit} />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
