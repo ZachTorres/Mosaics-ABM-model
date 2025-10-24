@@ -185,7 +185,7 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
                 </h2>
 
                 <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto leading-relaxed">
-                  Discover how Mosaic's workflow automation can streamline operations and drive measurable results for {microsite.companyName}
+                  Book a personalized demo to see how our workflow automation solutions can transform operations at {microsite.companyName}
                 </p>
 
                 <a
@@ -197,14 +197,14 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
                     background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
                   }}
                 >
-                  <span>Schedule a Consultation</span>
+                  <span>Book Your Demo</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </a>
 
                 <p className="text-sm text-gray-600 mt-6">
-                  Join industry leaders who trust Mosaic for workflow transformation
+                  See how Mosaic helps companies streamline document workflows and boost efficiency
                 </p>
               </div>
             </div>
