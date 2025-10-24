@@ -17,25 +17,21 @@ interface CompanyData {
     painPoints: string[]
     departments: string[]
     contentThemes: string[]
+    specificOfferings: string[]
+    valueProps: string[]
+    technologies: string[]
   }
   size: 'small' | 'medium' | 'large' | 'enterprise'
 }
 
-// Deep scrape company website for rich context
+// Enhanced multi-page scraping for deep company understanding
 async function deepScrapeCompany(url: string): Promise<CompanyData> {
   try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    })
+    console.log(`\n🔍 Starting deep scrape of ${url}...`)
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}`)
-    }
-
-    const html = await response.text()
-    const $ = cheerio.load(html)
+    // Scrape homepage first
+    const homeData = await scrapePage(url)
+    const $ = homeData.$
 
     // Extract company name and clean it
     let companyName =
@@ -43,8 +39,6 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
       $('meta[name="application-name"]').attr('content') ||
       $('title').text().split('|')[0].split('-')[0].trim() ||
       extractCompanyNameFromUrl(url)
-
-    // Remove .com, .net, .org etc from company name
     companyName = companyName.replace(/\.(com|net|org|io|co|ai|app|dev)$/i, '').trim()
 
     // Extract description
@@ -54,22 +48,48 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
       $('p').first().text().substring(0, 300) ||
       'A leading company in their industry'
 
-    // Extract ALL text content from the page for deep analysis
-    const pageText = $('body').text().toLowerCase()
-    const headings = $('h1, h2, h3').map((_, el) => $(el).text()).get().join(' ').toLowerCase()
-    const metaKeywords = $('meta[name="keywords"]').attr('content') || ''
+    console.log(`✅ Found company: ${companyName}`)
+    console.log(`📝 Description: ${description.substring(0, 100)}...`)
 
-    // Analyze business context from page content
-    const businessContext = analyzeBusinessContext(pageText, headings, description)
+    // Find and scrape additional pages for deeper context
+    const additionalPages = await findKeyPages($, url)
+    console.log(`🔗 Found ${additionalPages.length} additional pages to scrape`)
+
+    // Scrape up to 3 additional pages for context
+    const allPageData = [homeData]
+    for (const pageUrl of additionalPages.slice(0, 3)) {
+      try {
+        const pageData = await scrapePage(pageUrl)
+        allPageData.push(pageData)
+        console.log(`  ✓ Scraped: ${pageUrl}`)
+      } catch (err) {
+        console.log(`  ✗ Failed: ${pageUrl}`)
+      }
+    }
+
+    // Combine all text from all pages
+    const combinedText = allPageData.map(p => p.text).join(' ').toLowerCase()
+    const combinedHeadings = allPageData.map(p => p.headings).join(' ').toLowerCase()
+
+    console.log(`📊 Analyzed ${combinedText.split(' ').length} words across ${allPageData.length} pages`)
+
+    // Deep analysis of business context
+    const businessContext = analyzeBusinessContext(combinedText, combinedHeadings, description, companyName)
 
     // Detect industry with deep analysis
-    const industry = detectIndustryDeep(url, description, headings, pageText, businessContext)
+    const industry = detectIndustryDeep(url, description, combinedHeadings, combinedText, businessContext)
 
     // Estimate company size
-    const size = estimateCompanySize(pageText, description)
+    const size = estimateCompanySize(combinedText, description)
 
     // Extract colors
     const colors = await extractColors($, url)
+
+    console.log(`✨ Analysis complete!`)
+    console.log(`   Industry: ${industry}`)
+    console.log(`   Size: ${size}`)
+    console.log(`   Services: ${businessContext.mainServices.join(', ')}`)
+    console.log(`   Operations: ${businessContext.keyOperations.join(', ')}`)
 
     return {
       name: companyName,
@@ -81,14 +101,83 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
       size
     }
   } catch (error) {
-    console.error('Deep scraping error:', error)
+    console.error('❌ Deep scraping error:', error)
     return getFallbackData(url)
   }
 }
 
+// Scrape a single page and extract text content
+async function scrapePage(url: string) {
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    },
+    signal: AbortSignal.timeout(5000) // 5 second timeout per page
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}`)
+  }
+
+  const html = await response.text()
+  const $ = cheerio.load(html)
+
+  // Remove script, style, and nav elements
+  $('script, style, nav, header, footer').remove()
+
+  const text = $('body').text().replace(/\s+/g, ' ').trim()
+  const headings = $('h1, h2, h3, h4').map((_, el) => $(el).text()).get().join(' ')
+
+  return { $, text, headings }
+}
+
+// Find key pages that might have valuable information
+function findKeyPages($: cheerio.CheerioAPI, baseUrl: string): string[] {
+  const keyPages: string[] = []
+  const baseUrlObj = new URL(baseUrl)
+
+  // Look for common informational pages
+  const keyPhrases = [
+    'about', 'what-we-do', 'services', 'solutions', 'products',
+    'industries', 'capabilities', 'how-it-works', 'platform',
+    'features', 'overview', 'company'
+  ]
+
+  $('a[href]').each((_, el) => {
+    const href = $(el).attr('href')
+    if (!href) return
+
+    try {
+      // Convert relative URLs to absolute
+      const linkUrl = new URL(href, baseUrl).href
+
+      // Only include pages from the same domain
+      if (!linkUrl.startsWith(baseUrlObj.origin)) return
+
+      // Check if the link contains key phrases
+      const linkText = $(el).text().toLowerCase()
+      const linkPath = linkUrl.toLowerCase()
+
+      const isKeyPage = keyPhrases.some(phrase =>
+        linkPath.includes(phrase) || linkText.includes(phrase)
+      )
+
+      if (isKeyPage && !keyPages.includes(linkUrl) && keyPages.length < 10) {
+        keyPages.push(linkUrl)
+      }
+    } catch (e) {
+      // Invalid URL, skip
+    }
+  })
+
+  return keyPages
+}
+
 // Analyze business context from page content
-function analyzeBusinessContext(pageText: string, headings: string, description: string): CompanyData['businessContext'] {
+function analyzeBusinessContext(pageText: string, headings: string, description: string, companyName: string): CompanyData['businessContext'] {
   const combined = `${pageText} ${headings} ${description}`.toLowerCase()
+
+  console.log(`🔬 Analyzing business context for ${companyName}...`)
 
   // Detect main services/offerings
   const serviceKeywords = {
@@ -161,12 +250,58 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
     }
   }
 
+  // Extract specific offerings/products mentioned
+  const specificOfferings: string[] = []
+  const offeringPatterns = [
+    /(?:we offer|we provide|our services include|we specialize in)\s+([^.]{10,80})/gi,
+    /(?:solutions? for|products? for|services? for)\s+([^.]{10,60})/gi,
+    /(?:helping|enabling|empowering)\s+(?:companies|businesses|organizations)\s+(?:to\s+)?([^.]{10,60})/gi
+  ]
+
+  offeringPatterns.forEach(pattern => {
+    const matches = combined.matchAll(pattern)
+    for (const match of matches) {
+      if (match[1]) {
+        const offering = match[1].trim()
+        if (offering.length > 15 && offering.length < 100) {
+          specificOfferings.push(offering)
+        }
+      }
+    }
+  })
+
+  // Extract company's own value propositions from headings
+  const valueProps: string[] = []
+  if (headings) {
+    const headingLines = headings.toLowerCase().split(/[.,\n]/).filter(h => h.trim().length > 10 && h.trim().length < 100)
+    headingLines.forEach(heading => {
+      // Look for value-oriented headings
+      if (heading.match(/(?:transform|improve|increase|reduce|automate|streamline|optimize|enhance|accelerate)/)) {
+        valueProps.push(heading.trim())
+      }
+    })
+  }
+
+  // Extract technology/tools they mention
+  const technologies: string[] = []
+  const techKeywords = ['salesforce', 'microsoft', 'sap', 'oracle', 'aws', 'azure', 'google cloud', 'dynamics', 'netsuite', 'quickbooks', 'sage', 'erp', 'crm', 'api']
+  techKeywords.forEach(tech => {
+    if (combined.includes(tech)) {
+      technologies.push(tech)
+    }
+  })
+
+  console.log(`  ✓ Found ${mainServices.length} services, ${keyOperations.length} operations, ${specificOfferings.length} specific offerings`)
+
   return {
     mainServices: mainServices.length > 0 ? mainServices : ['Business Services'],
     keyOperations: keyOperations.length > 0 ? keyOperations : ['Document Management'],
     painPoints: painPoints.length > 0 ? painPoints : ['Manual workflow inefficiencies'],
     departments,
-    contentThemes
+    contentThemes,
+    specificOfferings: specificOfferings.slice(0, 3), // Top 3 most relevant
+    valueProps: valueProps.slice(0, 3), // Top 3 value propositions
+    technologies: technologies.slice(0, 5) // Top 5 technologies mentioned
   }
 }
 
@@ -215,8 +350,9 @@ function estimateCompanySize(pageText: string, description: string): 'small' | '
   return 'medium' // default
 }
 
-// Known brand colors database for popular companies
+// Massively expanded brand colors database (100+ companies)
 const BRAND_COLORS: Record<string, { primary: string, secondary: string, accent: string }> = {
+  // Tech Giants
   'stripe': { primary: '#635bff', secondary: '#0a2540', accent: '#00d4ff' },
   'spotify': { primary: '#1db954', secondary: '#191414', accent: '#1ed760' },
   'netflix': { primary: '#e50914', secondary: '#221f1f', accent: '#b20710' },
@@ -229,32 +365,136 @@ const BRAND_COLORS: Record<string, { primary: string, secondary: string, accent:
   'microsoft': { primary: '#00a4ef', secondary: '#7fba00', accent: '#ffb900' },
   'google': { primary: '#4285f4', secondary: '#ea4335', accent: '#fbbc04' },
   'amazon': { primary: '#ff9900', secondary: '#146eb4', accent: '#232f3e' },
+  'apple': { primary: '#000000', secondary: '#555555', accent: '#a6a6a6' },
+  'meta': { primary: '#0081fb', secondary: '#0467df', accent: '#00c6ff' },
+  'x': { primary: '#000000', secondary: '#1da1f2', accent: '#657786' },
+
+  // SaaS/Business Tools
   'salesforce': { primary: '#00a1e0', secondary: '#032d60', accent: '#1798c1' },
   'shopify': { primary: '#96bf48', secondary: '#5e8e3e', accent: '#7ab55c' },
   'hubspot': { primary: '#ff7a59', secondary: '#33475b', accent: '#00bda5' },
   'zoom': { primary: '#2d8cff', secondary: '#0e5a8a', accent: '#1a73e8' },
   'dropbox': { primary: '#0061ff', secondary: '#1e87f0', accent: '#007ee5' },
+  'asana': { primary: '#f06a6a', secondary: '#e91e63', accent: '#ffb900' },
+  'notion': { primary: '#000000', secondary: '#ffffff', accent: '#3f3f3f' },
+  'airtable': { primary: '#18bfff', secondary: '#fcb400', accent: '#f82b60' },
+  'monday': { primary: '#ff3d57', secondary: '#6c6cff', accent: '#ffcb00' },
+  'trello': { primary: '#0079bf', secondary: '#026aa7', accent: '#5ba4cf' },
+  'figma': { primary: '#f24e1e', secondary: '#a259ff', accent: '#0acf83' },
+  'canva': { primary: '#00c4cc', secondary: '#7d2ae8', accent: '#ff5757' },
+  'mailchimp': { primary: '#ffe01b', secondary: '#241c15', accent: '#007c89' },
+  'twilio': { primary: '#f22f46', secondary: '#0d122b', accent: '#ffffff' },
+
+  // Retail/Consumer
   'nike': { primary: '#111111', secondary: '#757575', accent: '#ffffff' },
   'adidas': { primary: '#000000', secondary: '#767677', accent: '#eceff1' },
   'cocacola': { primary: '#f40009', secondary: '#000000', accent: '#ffffff' },
+  'coke': { primary: '#f40009', secondary: '#000000', accent: '#ffffff' },
   'pepsi': { primary: '#004b93', secondary: '#e32934', accent: '#ffffff' },
   'starbucks': { primary: '#00704a', secondary: '#1e3932', accent: '#d4af37' },
   'mcdonalds': { primary: '#ffc72c', secondary: '#da291c', accent: '#27251f' },
   'target': { primary: '#cc0000', secondary: '#ffffff', accent: '#000000' },
   'walmart': { primary: '#0071ce', secondary: '#ffc220', accent: '#004f9a' },
-  'tesla': { primary: '#cc0000', secondary: '#000000', accent: '#393c41' }
+  'costco': { primary: '#0c5ea3', secondary: '#e31837', accent: '#ffffff' },
+  'ikea': { primary: '#0051ba', secondary: '#ffdb00', accent: '#ffffff' },
+  'bestbuy': { primary: '#0046be', secondary: '#fff200', accent: '#1d252d' },
+  'homedepot': { primary: '#f96302', secondary: '#ffffff', accent: '#000000' },
+  'lowes': { primary: '#004990', secondary: '#c41e3a', accent: '#ffffff' },
+
+  // Automotive
+  'tesla': { primary: '#cc0000', secondary: '#000000', accent: '#393c41' },
+  'ford': { primary: '#003478', secondary: '#ffffff', accent: '#c9d0d8' },
+  'toyota': { primary: '#eb0a1e', secondary: '#000000', accent: '#ffffff' },
+  'bmw': { primary: '#1c69d4', secondary: '#ffffff', accent: '#000000' },
+  'mercedes': { primary: '#00adef', secondary: '#000000', accent: '#e5e5e5' },
+  'honda': { primary: '#e40521', secondary: '#000000', accent: '#ffffff' },
+
+  // Airlines
+  'delta': { primary: '#003a70', secondary: '#ce1126', accent: '#ffffff' },
+  'united': { primary: '#002147', secondary: '#0e6ab3', accent: '#ffffff' },
+  'american': { primary: '#0078d2', secondary: '#c60c30', accent: '#4d4f53' },
+  'southwest': { primary: '#304cb2', secondary: '#ffbf27', accent: '#e31c23' },
+
+  // Financial
+  'visa': { primary: '#1a1f71', secondary: '#f7b600', accent: '#ffffff' },
+  'mastercard': { primary: '#eb001b', secondary: '#ff5f00', accent: '#f79e1b' },
+  'amex': { primary: '#006fcf', secondary: '#ffffff', accent: '#00175a' },
+  'paypal': { primary: '#003087', secondary: '#009cde', accent: '#012169' },
+  'chase': { primary: '#117aca', secondary: '#004987', accent: '#ffffff' },
+  'wellsfargo': { primary: '#d71e28', secondary: '#fdb71a', accent: '#ffffff' },
+  'bankofamerica': { primary: '#e31837', secondary: '#012169', accent: '#ffffff' },
+  'bofa': { primary: '#e31837', secondary: '#012169', accent: '#ffffff' },
+
+  // Social Media
+  'instagram': { primary: '#e4405f', secondary: '#5851db', accent: '#fcaf45' },
+  'tiktok': { primary: '#fe2c55', secondary: '#000000', accent: '#25f4ee' },
+  'snapchat': { primary: '#fffc00', secondary: '#000000', accent: '#ffffff' },
+  'pinterest': { primary: '#e60023', secondary: '#000000', accent: '#ffffff' },
+  'reddit': { primary: '#ff4500', secondary: '#ffffff', accent: '#000000' },
+  'youtube': { primary: '#ff0000', secondary: '#282828', accent: '#ffffff' },
+  'whatsapp': { primary: '#25d366', secondary: '#075e54', accent: '#128c7e' },
+  'telegram': { primary: '#0088cc', secondary: '#ffffff', accent: '#2196f3' },
+  'discord': { primary: '#5865f2', secondary: '#404eed', accent: '#3ba55d' },
+
+  // Streaming/Entertainment
+  'hulu': { primary: '#1ce783', secondary: '#0b0c0f', accent: '#ffffff' },
+  'disney': { primary: '#113ccf', secondary: '#ffffff', accent: '#000000' },
+  'hbo': { primary: '#000000', secondary: '#b8b8b8', accent: '#ffffff' },
+  'peacock': { primary: '#000000', secondary: '#ffffff', accent: '#ffd700' },
+  'paramount': { primary: '#0064ff', secondary: '#ffffff', accent: '#000000' },
+
+  // Food Delivery
+  'doordash': { primary: '#ff3008', secondary: '#ffffff', accent: '#000000' },
+  'ubereats': { primary: '#06c167', secondary: '#000000', accent: '#ffffff' },
+  'grubhub': { primary: '#f63440', secondary: '#ff8000', accent: '#000000' },
+  'postmates': { primary: '#000000', secondary: '#ffffff', accent: '#fe3a24' },
+
+  // E-commerce
+  'ebay': { primary: '#e53238', secondary: '#0064d2', accent: '#f5af02' },
+  'etsy': { primary: '#f16521', secondary: '#000000', accent: '#ffffff' },
+  'wayfair': { primary: '#7b0099', secondary: '#ffffff', accent: '#000000' },
+
+  // Tech Services
+  'aws': { primary: '#ff9900', secondary: '#232f3e', accent: '#ffffff' },
+  'azure': { primary: '#0089d6', secondary: '#50e6ff', accent: '#ffffff' },
+  'heroku': { primary: '#430098', secondary: '#6762a6', accent: '#c9c3e6' },
+  'github': { primary: '#24292f', secondary: '#ffffff', accent: '#0969da' },
+  'gitlab': { primary: '#fc6d26', secondary: '#fca326', accent: '#6e49cb' },
+  'bitbucket': { primary: '#0052cc', secondary: '#2684ff', accent: '#ffffff' }
 }
 
 // Extract colors from website with multiple fallback methods
 async function extractColors($: cheerio.CheerioAPI, url: string): Promise<{ primary: string, secondary: string, accent: string }> {
-  // First, check if this is a known brand
-  const domain = url.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('.')[0]
+  // First, check if this is a known brand (with fuzzy matching)
+  const fullDomain = url.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
+  const domain = fullDomain.split('.')[0]
+
+  // Try exact match first
   if (BRAND_COLORS[domain]) {
     console.log(`🎨 Using known brand colors for: ${domain}`)
     return BRAND_COLORS[domain]
   }
 
+  // Try fuzzy matching (e.g., "bank-of-america" matches "bankofamerica")
+  const normalizedDomain = domain.replace(/[-_]/g, '')
+  for (const [brandKey, colors] of Object.entries(BRAND_COLORS)) {
+    if (brandKey.replace(/[-_]/g, '') === normalizedDomain) {
+      console.log(`🎨 Using known brand colors for: ${brandKey} (fuzzy match)`)
+      return colors
+    }
+  }
+
   const colorFrequency: Record<string, number> = {}
+
+  // Priority weights for different extraction methods
+  const WEIGHT_THEME_COLOR = 25      // Meta theme-color tag (highest priority)
+  const WEIGHT_FAVICON = 20          // Colors from favicon
+  const WEIGHT_CSS_VAR = 15          // CSS custom properties
+  const WEIGHT_LOGO_SVG = 12         // SVG logos
+  const WEIGHT_HEADER_NAV = 10       // Header/nav elements
+  const WEIGHT_CTA_BUTTON = 8        // Call-to-action buttons
+  const WEIGHT_INLINE_STYLE = 5      // Inline styles
+  const WEIGHT_GENERAL_CSS = 2       // General CSS
 
   // Method 1: Check meta theme-color (highest priority)
   const themeColor = $('meta[name="theme-color"]').attr('content')
@@ -494,7 +734,10 @@ function getFallbackData(url: string): CompanyData {
       keyOperations: ['Document Management'],
       painPoints: ['Manual workflow inefficiencies'],
       departments: [],
-      contentThemes: ['efficiency']
+      contentThemes: ['efficiency'],
+      specificOfferings: [],
+      valueProps: [],
+      technologies: []
     },
     size: 'medium'
   }
@@ -507,6 +750,17 @@ function generateMosaicSolution(companyData: CompanyData) {
   // Build specific pain points based on their actual operations
   const painPoints: string[] = []
   const solutions: string[] = []
+
+  // Add context-specific pain points based on what they actually do
+  if (businessContext.specificOfferings.length > 0) {
+    const offering = businessContext.specificOfferings[0]
+    painPoints.push(`With ${name}'s focus on ${offering}, document-heavy processes likely slow down service delivery and impact client satisfaction`)
+  }
+
+  // If they mention specific technologies, reference integration opportunities
+  const hasMicrosoftTech = businessContext.technologies.some(t => t.includes('microsoft') || t.includes('dynamics'))
+  const hasSAPTech = businessContext.technologies.some(t => t.includes('sap'))
+  const hasOtherERP = businessContext.technologies.some(t => t.includes('netsuite') || t.includes('sage') || t.includes('erp'))
 
   // AP/Invoice Processing (core Mosaic solution)
   if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
@@ -545,8 +799,16 @@ function generateMosaicSolution(companyData: CompanyData) {
     solutions.push(`DocStar ECM's complete audit trail shows ${name} exactly who accessed, edited, or approved every document, with automated retention policies ensuring compliance without manual tracking`)
   }
 
-  // Add ERP integration benefit
-  solutions.push(`Seamless ERP Integration: Mosaic connects directly to ${name}'s existing systems (Microsoft Dynamics 365, Sage Intacct, SAP, or any ERP), eliminating double entry and ensuring data accuracy`)
+  // Add ERP integration benefit with specific technology mentions
+  if (hasMicrosoftTech) {
+    solutions.push(`Seamless Microsoft Dynamics Integration: Mosaic connects directly to ${name}'s Microsoft Dynamics 365 or Business Central system, eliminating double entry and ensuring data accuracy across finance and operations`)
+  } else if (hasSAPTech) {
+    solutions.push(`Native SAP Integration: Mosaic integrates seamlessly with ${name}'s SAP environment, automatically syncing documents and data to ensure accuracy across your enterprise systems`)
+  } else if (hasOtherERP) {
+    solutions.push(`ERP Integration: Mosaic connects directly to ${name}'s existing ERP system (Sage Intacct, NetSuite, or others), eliminating double entry and ensuring data accuracy`)
+  } else {
+    solutions.push(`Seamless ERP Integration: Mosaic connects directly to ${name}'s existing systems, eliminating double entry and ensuring data accuracy across your business operations`)
+  }
 
   // Industry-specific additions
   if (industry === 'Healthcare') {
