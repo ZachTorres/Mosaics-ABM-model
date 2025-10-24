@@ -1034,7 +1034,7 @@ function generateMosaicSolution(companyData: CompanyData) {
     pitch = `We help companies like yours spend less time on paperwork and manual processes.`
   }
 
-  const cta = `Get Your Free ${name} Workflow Analysis`
+  const cta = `Transform Operations at ${name}`
 
   return {
     companyName: name,
