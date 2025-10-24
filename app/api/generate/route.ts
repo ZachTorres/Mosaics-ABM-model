@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 
-// Enhanced company data interface
 interface CompanyData {
   name: string
   url: string
@@ -12,16 +11,18 @@ interface CompanyData {
     secondary: string
     accent: string
   }
-  metaData: {
-    title: string
-    description: string
-    keywords: string[]
+  businessContext: {
+    mainServices: string[]
+    keyOperations: string[]
+    painPoints: string[]
+    departments: string[]
+    contentThemes: string[]
   }
-  logoUrl?: string
+  size: 'small' | 'medium' | 'large' | 'enterprise'
 }
 
-// Scrape real company website data
-async function scrapeCompanyWebsite(url: string): Promise<CompanyData> {
+// Deep scrape company website for rich context
+async function deepScrapeCompany(url: string): Promise<CompanyData> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -47,28 +48,25 @@ async function scrapeCompanyWebsite(url: string): Promise<CompanyData> {
     const description =
       $('meta[property="og:description"]').attr('content') ||
       $('meta[name="description"]').attr('content') ||
-      $('p').first().text().substring(0, 200) ||
+      $('p').first().text().substring(0, 300) ||
       'A leading company in their industry'
 
-    // Extract meta title
-    const metaTitle = $('title').text() || companyName
+    // Extract ALL text content from the page for deep analysis
+    const pageText = $('body').text().toLowerCase()
+    const headings = $('h1, h2, h3').map((_, el) => $(el).text()).get().join(' ').toLowerCase()
+    const metaKeywords = $('meta[name="keywords"]').attr('content') || ''
 
-    // Extract keywords
-    const keywordsMeta = $('meta[name="keywords"]').attr('content') || ''
-    const keywords = keywordsMeta.split(',').map(k => k.trim()).filter(k => k)
+    // Analyze business context from page content
+    const businessContext = analyzeBusinessContext(pageText, headings, description)
 
-    // Extract logo
-    const logoUrl =
-      $('meta[property="og:image"]').attr('content') ||
-      $('link[rel="icon"]').attr('href') ||
-      $('link[rel="apple-touch-icon"]').attr('href') ||
-      undefined
+    // Detect industry with deep analysis
+    const industry = detectIndustryDeep(url, description, headings, pageText, businessContext)
 
-    // Extract colors from CSS and style tags
+    // Estimate company size
+    const size = estimateCompanySize(pageText, description)
+
+    // Extract colors
     const colors = await extractColors($, url)
-
-    // Detect industry
-    const industry = detectIndustry(url, description, metaTitle, keywords)
 
     return {
       name: companyName,
@@ -76,29 +74,142 @@ async function scrapeCompanyWebsite(url: string): Promise<CompanyData> {
       industry,
       description,
       colors,
-      metaData: {
-        title: metaTitle,
-        description,
-        keywords
-      },
-      logoUrl
+      businessContext,
+      size
     }
   } catch (error) {
-    console.error('Scraping error:', error)
-    // Fallback to basic extraction
-    return {
-      name: extractCompanyNameFromUrl(url),
-      url,
-      industry: detectIndustry(url, '', '', []),
-      description: 'A leading company in their industry',
-      colors: getDefaultColors(),
-      metaData: {
-        title: extractCompanyNameFromUrl(url),
-        description: '',
-        keywords: []
-      }
+    console.error('Deep scraping error:', error)
+    return getFallbackData(url)
+  }
+}
+
+// Analyze business context from page content
+function analyzeBusinessContext(pageText: string, headings: string, description: string): CompanyData['businessContext'] {
+  const combined = `${pageText} ${headings} ${description}`.toLowerCase()
+
+  // Detect main services/offerings
+  const serviceKeywords = {
+    'Software/SaaS': ['software', 'platform', 'saas', 'application', 'cloud', 'api', 'integration'],
+    'Consulting': ['consulting', 'advisory', 'strategy', 'professional services'],
+    'Healthcare Services': ['patient', 'care', 'medical', 'clinical', 'treatment', 'health'],
+    'Financial Services': ['investment', 'banking', 'insurance', 'loans', 'financial planning'],
+    'Manufacturing': ['manufacturing', 'production', 'assembly', 'supply chain', 'distribution'],
+    'Retail/E-commerce': ['shop', 'store', 'ecommerce', 'products', 'merchandise', 'customers'],
+    'Education': ['students', 'courses', 'learning', 'education', 'training', 'curriculum']
+  }
+
+  const mainServices: string[] = []
+  for (const [service, keywords] of Object.entries(serviceKeywords)) {
+    const matches = keywords.filter(kw => combined.includes(kw)).length
+    if (matches >= 2) mainServices.push(service)
+  }
+
+  // Detect key operations that need automation
+  const operationKeywords = {
+    'Invoice Processing': ['invoice', 'billing', 'accounts payable', 'ap', 'vendor'],
+    'Order Management': ['orders', 'order processing', 'sales order', 'fulfillment', 'purchasing'],
+    'Document Management': ['documents', 'files', 'records', 'paperwork', 'forms'],
+    'HR/Payroll': ['payroll', 'hr', 'human resources', 'employees', 'onboarding'],
+    'Customer Service': ['customer support', 'service', 'help desk', 'tickets'],
+    'Compliance/Regulatory': ['compliance', 'regulatory', 'audit', 'governance']
+  }
+
+  const keyOperations: string[] = []
+  for (const [operation, keywords] of Object.entries(operationKeywords)) {
+    if (keywords.some(kw => combined.includes(kw))) {
+      keyOperations.push(operation)
     }
   }
+
+  // Detect pain points from common phrases
+  const painPoints: string[] = []
+  const painIndicators = [
+    { phrase: 'manual', point: 'Manual processes slowing down operations' },
+    { phrase: 'paper', point: 'Paper-based workflows causing inefficiencies' },
+    { phrase: 'error', point: 'Data entry errors impacting accuracy' },
+    { phrase: 'time-consuming', point: 'Time-consuming administrative tasks' },
+    { phrase: 'compliance', point: 'Compliance and audit trail challenges' },
+    { phrase: 'integration', point: 'System integration and data silos' }
+  ]
+
+  painIndicators.forEach(({ phrase, point }) => {
+    if (combined.includes(phrase)) painPoints.push(point)
+  })
+
+  // Detect departments
+  const departments: string[] = []
+  const deptKeywords = ['finance', 'accounting', 'hr', 'operations', 'sales', 'procurement', 'it', 'legal']
+  deptKeywords.forEach(dept => {
+    if (combined.includes(dept)) departments.push(dept.toUpperCase())
+  })
+
+  // Extract content themes
+  const contentThemes: string[] = []
+  const themeKeywords = {
+    'efficiency': ['efficiency', 'productivity', 'streamline', 'optimize'],
+    'innovation': ['innovation', 'transform', 'digital', 'technology'],
+    'growth': ['growth', 'scale', 'expand', 'revenue'],
+    'quality': ['quality', 'excellence', 'best', 'premium']
+  }
+
+  for (const [theme, keywords] of Object.entries(themeKeywords)) {
+    if (keywords.some(kw => combined.includes(kw))) {
+      contentThemes.push(theme)
+    }
+  }
+
+  return {
+    mainServices: mainServices.length > 0 ? mainServices : ['Business Services'],
+    keyOperations: keyOperations.length > 0 ? keyOperations : ['Document Management'],
+    painPoints: painPoints.length > 0 ? painPoints : ['Manual workflow inefficiencies'],
+    departments,
+    contentThemes
+  }
+}
+
+// Detect industry with deep analysis
+function detectIndustryDeep(url: string, description: string, headings: string, pageText: string, context: CompanyData['businessContext']): string {
+  const combined = `${url} ${description} ${headings} ${pageText}`.toLowerCase()
+
+  const industryPatterns = {
+    'Healthcare': ['health', 'medical', 'hospital', 'clinic', 'pharma', 'patient', 'doctor', 'medicine', 'care'],
+    'Financial Services': ['bank', 'finance', 'insurance', 'investment', 'loan', 'credit', 'wealth', 'fintech'],
+    'Technology': ['tech', 'software', 'saas', 'cloud', 'digital', 'platform', 'app', 'api', 'data'],
+    'Manufacturing': ['manufacturing', 'factory', 'production', 'industrial', 'assembly', 'supply chain'],
+    'Retail': ['retail', 'store', 'shop', 'ecommerce', 'e-commerce', 'merchandise', 'fashion'],
+    'Education': ['education', 'university', 'school', 'college', 'learning', 'student', 'academic'],
+    'Real Estate': ['real estate', 'property', 'realtor', 'housing', 'commercial property'],
+    'Legal': ['legal', 'law', 'attorney', 'lawyer', 'litigation', 'court'],
+    'Professional Services': ['consulting', 'advisory', 'professional services', 'strategy']
+  }
+
+  let maxScore = 0
+  let detectedIndustry = 'Business Services'
+
+  for (const [industry, keywords] of Object.entries(industryPatterns)) {
+    const score = keywords.filter(kw => combined.includes(kw)).length
+    if (score > maxScore) {
+      maxScore = score
+      detectedIndustry = industry
+    }
+  }
+
+  return detectedIndustry
+}
+
+// Estimate company size
+function estimateCompanySize(pageText: string, description: string): 'small' | 'medium' | 'large' | 'enterprise' {
+  const combined = `${pageText} ${description}`.toLowerCase()
+
+  if (combined.includes('enterprise') || combined.includes('global') || combined.includes('worldwide')) {
+    return 'enterprise'
+  } else if (combined.includes('fortune') || combined.includes('leading') || combined.includes('largest')) {
+    return 'large'
+  } else if (combined.includes('growing') || combined.includes('mid-size')) {
+    return 'medium'
+  }
+
+  return 'medium' // default
 }
 
 // Extract colors from website
@@ -108,86 +219,56 @@ async function extractColors($: cheerio.CheerioAPI, url: string): Promise<{ prim
   // Extract from inline styles
   $('[style]').each((_, elem) => {
     const style = $(elem).attr('style') || ''
-    const colorMatches = style.match(/#[0-9A-Fa-f]{6}|rgb\([^)]+\)/g)
-    if (colorMatches) {
-      colors.push(...colorMatches)
-    }
+    const colorMatches = style.match(/#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|rgb\([^)]+\)/g)
+    if (colorMatches) colors.push(...colorMatches)
   })
 
   // Extract from style tags
   $('style').each((_, elem) => {
     const css = $(elem).html() || ''
-    const colorMatches = css.match(/#[0-9A-Fa-f]{6}|rgb\([^)]+\)/g)
-    if (colorMatches) {
-      colors.push(...colorMatches)
-    }
+    const colorMatches = css.match(/#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|rgb\([^)]+\)/g)
+    if (colorMatches) colors.push(...colorMatches)
   })
 
-  // Convert rgb to hex and filter unique colors
+  // Convert to hex and filter
   const hexColors = colors
     .map(color => {
       if (color.startsWith('rgb')) {
         const matches = color.match(/\d+/g)
         if (matches && matches.length >= 3) {
-          const r = parseInt(matches[0])
-          const g = parseInt(matches[1])
-          const b = parseInt(matches[2])
-          return rgbToHex(r, g, b)
+          return rgbToHex(parseInt(matches[0]), parseInt(matches[1]), parseInt(matches[2]))
         }
+      }
+      if (color.length === 4) { // #RGB to #RRGGBB
+        return '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3]
       }
       return color.toLowerCase()
     })
     .filter((color, index, self) => self.indexOf(color) === index)
-    .filter(color => !isGrayscale(color)) // Filter out grays/blacks/whites
+    .filter(color => color.startsWith('#') && !isGrayscale(color))
     .slice(0, 10)
 
   if (hexColors.length >= 3) {
-    return {
-      primary: hexColors[0],
-      secondary: hexColors[1],
-      accent: hexColors[2]
-    }
+    return { primary: hexColors[0], secondary: hexColors[1], accent: hexColors[2] }
   } else if (hexColors.length > 0) {
-    return {
-      primary: hexColors[0],
-      secondary: hexColors[0],
-      accent: hexColors[0]
-    }
-  } else {
-    return getDefaultColors()
+    return { primary: hexColors[0], secondary: hexColors[0], accent: hexColors[0] }
   }
+
+  return { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' }
 }
 
-// Helper: RGB to Hex
 function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map(x => {
-    const hex = x.toString(16)
-    return hex.length === 1 ? '0' + hex : hex
-  }).join('')
+  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')
 }
 
-// Helper: Check if color is grayscale
 function isGrayscale(hex: string): boolean {
-  if (!hex.startsWith('#')) return false
+  if (!hex.startsWith('#') || hex.length !== 7) return false
   const r = parseInt(hex.slice(1, 3), 16)
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
-
-  // Consider it grayscale if RGB values are close to each other
-  const diff = Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b))
-  return diff < 30
+  return Math.max(Math.abs(r - g), Math.abs(g - b), Math.abs(r - b)) < 30
 }
 
-// Helper: Get default colors
-function getDefaultColors() {
-  return {
-    primary: '#2563eb',
-    secondary: '#4f46e5',
-    accent: '#3b82f6'
-  }
-}
-
-// Extract company name from URL
 function extractCompanyNameFromUrl(url: string): string {
   try {
     const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
@@ -198,148 +279,111 @@ function extractCompanyNameFromUrl(url: string): string {
   }
 }
 
-// Enhanced industry detection
-function detectIndustry(url: string, description: string, title: string, keywords: string[]): string {
-  const combined = `${url} ${description} ${title} ${keywords.join(' ')}`.toLowerCase()
-
-  const patterns = {
-    'Technology': ['tech', 'software', 'app', 'saas', 'cloud', 'digital', 'ai', 'data', 'analytics', 'platform'],
-    'Healthcare': ['health', 'medical', 'hospital', 'clinic', 'pharma', 'patient', 'care', 'medicine', 'doctor'],
-    'Financial Services': ['finance', 'bank', 'invest', 'insurance', 'wealth', 'credit', 'loan', 'payment', 'fintech'],
-    'Retail': ['retail', 'shop', 'store', 'ecommerce', 'e-commerce', 'fashion', 'clothing', 'merchandise'],
-    'Education': ['education', 'university', 'college', 'school', 'learning', 'course', 'student', 'academic'],
-    'Manufacturing': ['manufacturing', 'industrial', 'factory', 'production', 'assembly', 'machinery'],
-    'Real Estate': ['real estate', 'property', 'realtor', 'housing', 'apartment', 'commercial property'],
-    'Consulting': ['consulting', 'advisory', 'professional services', 'strategy', 'management consulting'],
-    'Marketing': ['marketing', 'advertising', 'branding', 'agency', 'creative', 'media', 'campaign'],
-    'Logistics': ['logistics', 'shipping', 'freight', 'supply chain', 'warehouse', 'delivery', 'transport']
+function getFallbackData(url: string): CompanyData {
+  return {
+    name: extractCompanyNameFromUrl(url),
+    url,
+    industry: 'Business Services',
+    description: 'A leading company in their industry',
+    colors: { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' },
+    businessContext: {
+      mainServices: ['Business Services'],
+      keyOperations: ['Document Management'],
+      painPoints: ['Manual workflow inefficiencies'],
+      departments: [],
+      contentThemes: ['efficiency']
+    },
+    size: 'medium'
   }
-
-  for (const [industry, terms] of Object.entries(patterns)) {
-    if (terms.some(term => combined.includes(term))) {
-      return industry
-    }
-  }
-
-  return 'Business Services'
 }
 
-// Enhanced content generation with deep personalization
-function generatePersonalizedContent(companyData: CompanyData) {
-  const industryContent: Record<string, any> = {
-    'Technology': {
-      painPoints: [
-        `Integrating ${companyData.name}'s existing tech stack with modern automation solutions`,
-        'Managing complex workflows across multiple development and deployment pipelines',
-        'Scaling infrastructure while maintaining security and compliance standards',
-        'Reducing manual processes that slow down innovation and time-to-market'
-      ],
-      solutions: [
-        `Custom workflow automation tailored to ${companyData.name}'s unique tech architecture`,
-        'Seamless API integrations with your existing development tools and platforms',
-        'Intelligent document processing to eliminate manual data entry across systems',
-        'Real-time monitoring and automated compliance reporting for your tech operations'
-      ],
-      headline: `Accelerate ${companyData.name}'s Innovation with Mosaic Automation`,
-      pitch: `${companyData.name} is building cutting-edge technology. But manual processes are holding your team back. Mosaic's intelligent automation platform eliminates the repetitive tasks that slow down innovation, so your engineers can focus on what they do best: building great products.`
-    },
-    'Healthcare': {
-      painPoints: [
-        `Managing patient data and records across ${companyData.name}'s multiple systems and locations`,
-        'Ensuring HIPAA compliance while streamlining administrative workflows',
-        'Reducing the time medical staff spend on paperwork and data entry',
-        'Coordinating care and communication between departments and facilities'
-      ],
-      solutions: [
-        `HIPAA-compliant automation that works within ${companyData.name}'s existing healthcare IT infrastructure`,
-        'Automated patient record processing and intelligent data extraction from medical documents',
-        'Streamlined billing and insurance claim processing reducing administrative burden by 40%',
-        'Real-time care coordination workflows connecting all departments and providers'
-      ],
-      headline: `Transform ${companyData.name}'s Healthcare Operations with Mosaic`,
-      pitch: `${companyData.name} is focused on delivering exceptional patient care. Mosaic automates the administrative tasks that take time away from patients—from document processing to billing to care coordination. More time for care, less time on paperwork.`
-    },
-    'Financial Services': {
-      painPoints: [
-        `Processing high volumes of financial documents and transactions at ${companyData.name}`,
-        'Maintaining regulatory compliance across multiple jurisdictions and frameworks',
-        'Reducing risk while accelerating customer onboarding and service delivery',
-        'Integrating data from legacy systems with modern digital banking platforms'
-      ],
-      solutions: [
-        `Intelligent document processing for ${companyData.name}'s financial operations with 99.9% accuracy`,
-        'Automated compliance monitoring and reporting across all regulatory requirements',
-        'Streamlined KYC and customer onboarding reducing time-to-approval by 75%',
-        'Secure data integration connecting your core banking systems with digital channels'
-      ],
-      headline: `Power ${companyData.name}'s Digital Transformation with Mosaic`,
-      pitch: `${companyData.name} operates in a highly regulated, fast-paced environment. Mosaic's automation platform helps you move faster while staying compliant—processing documents instantly, onboarding customers in minutes instead of days, and reducing operational risk.`
-    },
-    'Retail': {
-      painPoints: [
-        `Managing inventory and orders across ${companyData.name}'s multiple sales channels`,
-        'Processing supplier invoices, purchase orders, and shipping documents efficiently',
-        'Coordinating between warehouses, retail locations, and e-commerce operations',
-        'Delivering personalized customer experiences while scaling operations'
-      ],
-      solutions: [
-        `Unified automation platform connecting ${companyData.name}'s entire retail ecosystem`,
-        'Automated invoice and order processing eliminating manual data entry errors',
-        'Real-time inventory synchronization across all channels and locations',
-        'Intelligent customer data management for personalized omnichannel experiences'
-      ],
-      headline: `Scale ${companyData.name}'s Retail Operations with Mosaic Automation`,
-      pitch: `${companyData.name} is growing fast, but manual processes are creating bottlenecks. Mosaic automates everything from purchase orders to inventory management to customer service—helping you scale seamlessly while delivering the personalized experiences customers expect.`
-    },
-    'Education': {
-      painPoints: [
-        `Managing student records and enrollment processes across ${companyData.name}'s programs`,
-        'Coordinating communication between students, faculty, and administrative staff',
-        'Processing financial aid applications and tuition payments efficiently',
-        'Maintaining compliance with educational regulations and accreditation standards'
-      ],
-      solutions: [
-        `Automated enrollment and student record management for ${companyData.name}`,
-        'Intelligent document processing for financial aid and admissions applications',
-        'Unified communication platform connecting all stakeholders in real-time',
-        'Compliance-ready workflows meeting all educational regulations and standards'
-      ],
-      headline: `Modernize ${companyData.name}'s Educational Operations with Mosaic`,
-      pitch: `${companyData.name} is focused on student success. Mosaic automates the administrative tasks that take time away from education—from enrollment to financial aid to record keeping. Spend less time on paperwork, more time on students.`
-    }
+// Generate deeply personalized content using Mosaic's actual solutions
+function generateMosaicSolution(companyData: CompanyData) {
+  const { name, industry, businessContext, size } = companyData
+
+  // Build specific pain points based on their actual operations
+  const painPoints: string[] = []
+  const solutions: string[] = []
+
+  // AP/Invoice Processing (core Mosaic solution)
+  if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
+    painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, leading to errors, delayed payments, and frustrated AP staff`)
+    painPoints.push(`Paper invoices and email attachments create bottlenecks in ${name}'s accounts payable workflow, making it impossible to track approval status or payment timelines`)
+
+    solutions.push(`**DocStar IDC (Intelligent Data Capture)** automatically captures invoice data from any format—paper, email, or digital—eliminating 90% of manual data entry at ${name}`)
+    solutions.push(`**DocStar ECM** provides ${name} with a single digital repository for all invoices, enabling instant search, automated routing, and complete audit trails for compliance`)
   }
 
-  const defaultContent = {
-    painPoints: [
-      `Managing complex workflows and processes across ${companyData.name}'s organization`,
-      'Reducing time spent on manual data entry and document processing',
-      'Improving collaboration and communication between departments',
-      'Gaining real-time visibility into operations and performance metrics'
-    ],
-    solutions: [
-      `Custom workflow automation designed specifically for ${companyData.name}'s unique needs`,
-      'Intelligent document processing eliminating manual data entry across your organization',
-      'Unified platform connecting all teams, systems, and processes in real-time',
-      'Advanced analytics providing actionable insights into your operations'
-    ],
-    headline: `Transform ${companyData.name}'s Operations with Mosaic Automation`,
-    pitch: `${companyData.name} has unique operational challenges. Mosaic's intelligent automation platform is designed to handle them—automating workflows, processing documents, and connecting systems so your team can focus on what matters most: growing your business.`
+  // Order Processing
+  if (businessContext.keyOperations.includes('Order Management')) {
+    painPoints.push(`Manual sales order processing at ${name} creates delays between order receipt and fulfillment, impacting customer satisfaction and revenue recognition`)
+
+    solutions.push(`Mosaic's **Sales Order Processing Automation** integrates directly with ${name}'s ERP system, automatically capturing orders, validating data, and routing for approval—reducing cycle time by 75%`)
   }
 
-  const content = industryContent[companyData.industry] || defaultContent
+  // Document Management (applies to almost everyone)
+  if (businessContext.keyOperations.includes('Document Management') || businessContext.painPoints.includes('Paper-based workflows causing inefficiencies')) {
+    painPoints.push(`${name}'s teams waste valuable time searching for documents across email, shared drives, and paper files—time that could be spent on strategic work`)
+
+    solutions.push(`**DocStar ECM (Enterprise Content Management)** gives ${name} a single, searchable repository for all business documents with role-based security, version control, and retention policies`)
+  }
+
+  // HR/Payroll
+  if (businessContext.keyOperations.includes('HR/Payroll') || businessContext.departments.includes('HR')) {
+    painPoints.push(`${name}'s HR department is buried in paperwork—employee onboarding forms, time-off requests, performance reviews—all requiring manual processing and filing`)
+
+    solutions.push(`**Mosaic HR Automation** digitizes ${name}'s entire employee lifecycle, from onboarding forms to benefits enrollment, with automated workflows and secure document storage`)
+  }
+
+  // Compliance/Audit
+  if (businessContext.keyOperations.includes('Compliance/Regulatory') || industry === 'Healthcare' || industry === 'Financial Services') {
+    painPoints.push(`Compliance audits are painful for ${name}—tracking down documents, proving approval chains, and demonstrating retention policies consumes weeks of staff time`)
+
+    solutions.push(`DocStar ECM's **complete audit trail** shows ${name} exactly who accessed, edited, or approved every document, with automated retention policies ensuring compliance without manual tracking`)
+  }
+
+  // Add ERP integration benefit
+  solutions.push(`**Seamless ERP Integration**: Mosaic connects directly to ${name}'s existing systems (Microsoft Dynamics 365, Sage Intacct, SAP, or any ERP), eliminating double entry and ensuring data accuracy`)
+
+  // Industry-specific additions
+  if (industry === 'Healthcare') {
+    painPoints.push(`Healthcare regulations like HIPAA create compliance burdens for ${name}, requiring meticulous document management and audit trails that manual processes can't reliably provide`)
+    solutions.push(`Mosaic's healthcare-compliant workflows ensure ${name} meets HIPAA requirements with encrypted storage, controlled access, and comprehensive audit logging`)
+  } else if (industry === 'Manufacturing') {
+    painPoints.push(`${name}'s manufacturing operations generate massive volumes of documents—purchase orders, packing slips, quality certifications—that need to move quickly through approvals`)
+    solutions.push(`Mosaic's **Freight & Shipping Automation** processes ${name}'s logistics documents instantly, matching POs to receipts and automatically updating inventory systems`)
+  } else if (industry === 'Financial Services') {
+    painPoints.push(`${name} faces stringent regulatory requirements for document retention, audit trails, and data security that manual processes simply cannot guarantee`)
+    solutions.push(`DocStar ECM provides ${name} with bank-level security, immutable audit trails, and configurable retention policies that automatically enforce regulatory compliance`)
+  }
+
+  // Add a few more generic pain points if we don't have enough
+  while (painPoints.length < 4) {
+    painPoints.push(`Manual workflows at ${name} mean key staff spend hours on repetitive tasks instead of strategic initiatives that drive growth`)
+  }
+
+  while (solutions.length < 4) {
+    solutions.push(`Mosaic's customized workflow automation is designed specifically for ${name}'s business rules and processes, not a one-size-fits-all solution`)
+  }
+
+  // Generate personalized headline and pitch
+  const headline = `Transform ${name}'s Workflow Automation with DocStar ECM & IDC`
+
+  const pitch = `${name} ${businessContext.mainServices.length > 0 ? 'is focused on ' + businessContext.mainServices[0].toLowerCase() : 'has unique operational needs'}, but manual processes are holding your team back. Mosaic's DocStar platform—combining Intelligent Data Capture (IDC) and Enterprise Content Management (ECM)—eliminates the paper-based workflows, manual data entry, and document chaos that waste your team's time. We've helped ${size === 'enterprise' ? 'Fortune 500 companies' : 'companies like yours'} reduce AP processing time by 80%, cut document retrieval time from hours to seconds, and achieve complete compliance visibility—all while integrating seamlessly with your existing systems.`
+
+  const cta = `See How DocStar Can Transform ${name}'s Operations`
 
   return {
-    companyName: companyData.name,
+    companyName: name,
     url: companyData.url,
-    industry: companyData.industry,
+    industry,
     description: companyData.description,
-    headline: content.headline,
-    subheadline: content.pitch,
-    painPoints: content.painPoints,
-    solutions: content.solutions,
+    headline,
+    subheadline: pitch,
+    painPoints: painPoints.slice(0, 5), // Top 5 most relevant
+    solutions: solutions.slice(0, 5), // Top 5 solutions
     colors: companyData.colors,
-    logoUrl: companyData.logoUrl,
-    cta: `See how Mosaic can transform ${companyData.name}`
+    cta
   }
 }
 
@@ -355,22 +399,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Normalize the URL
     let normalizedUrl = url.trim()
     if (!normalizedUrl.startsWith('http')) {
       normalizedUrl = 'https://' + normalizedUrl
     }
 
-    console.log(`🔍 Scraping ${normalizedUrl}...`)
+    console.log(`\n🔍 Deep scraping ${normalizedUrl}...`)
 
-    // Scrape company website
-    const companyData = await scrapeCompanyWebsite(normalizedUrl)
+    // Deep scrape the company website
+    const companyData = await deepScrapeCompany(normalizedUrl)
 
-    console.log(`✅ Scraped: ${companyData.name} (${companyData.industry})`)
-    console.log(`🎨 Colors: ${companyData.colors.primary}, ${companyData.colors.secondary}, ${companyData.colors.accent}`)
+    console.log(`✅ Scraped: ${companyData.name}`)
+    console.log(`📊 Industry: ${companyData.industry}`)
+    console.log(`🏢 Size: ${companyData.size}`)
+    console.log(`🎯 Key Operations: ${companyData.businessContext.keyOperations.join(', ')}`)
+    console.log(`🎨 Colors: ${companyData.colors.primary}, ${companyData.colors.secondary}`)
 
-    // Generate personalized content
-    const microsite = generatePersonalizedContent(companyData)
+    // Generate deeply personalized Mosaic solution
+    const microsite = generateMosaicSolution(companyData)
+
+    console.log(`✨ Generated personalized microsite for ${companyData.name}\n`)
 
     return NextResponse.json({
       success: true,
@@ -378,7 +426,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('❌ Error generating microsite:', error)
+    console.error('❌ Error:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to generate microsite' },
       { status: 500 }
