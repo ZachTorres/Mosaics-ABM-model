@@ -440,29 +440,79 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
 function detectIndustryDeep(url: string, description: string, headings: string, pageText: string, context: CompanyData['businessContext']): string {
   const combined = `${url} ${description} ${headings} ${pageText}`.toLowerCase()
 
+  // Weighted keyword scoring - primary keywords worth more than secondary
   const industryPatterns = {
-    'Healthcare': ['health', 'medical', 'hospital', 'clinic', 'pharma', 'patient', 'doctor', 'medicine', 'care'],
-    'Financial Services': ['bank', 'finance', 'insurance', 'investment', 'loan', 'credit', 'wealth', 'fintech'],
-    'Technology': ['tech', 'software', 'saas', 'cloud', 'digital', 'platform', 'app', 'api', 'data'],
-    'Manufacturing': ['manufacturing', 'factory', 'production', 'industrial', 'assembly', 'supply chain'],
-    'Retail': ['retail', 'store', 'shop', 'ecommerce', 'e-commerce', 'merchandise', 'fashion'],
-    'Education': ['education', 'university', 'school', 'college', 'learning', 'student', 'academic'],
-    'Real Estate': ['real estate', 'property', 'realtor', 'housing', 'commercial property'],
-    'Legal': ['legal', 'law', 'attorney', 'lawyer', 'litigation', 'court'],
-    'Professional Services': ['consulting', 'advisory', 'professional services', 'strategy']
+    'Healthcare': {
+      primary: ['hospital', 'clinic', 'medical center', 'patient care', 'healthcare', 'pharmaceutical', 'biotech'],
+      secondary: ['patient', 'doctor', 'medicine', 'clinical', 'diagnosis', 'treatment']
+    },
+    'Financial Services': {
+      primary: ['bank', 'banking', 'insurance', 'investment', 'financial services', 'fintech', 'wealth management'],
+      secondary: ['loan', 'credit', 'mortgage', 'assets', 'portfolio']
+    },
+    'Technology': {
+      primary: ['software', 'saas', 'cloud computing', 'technology company', 'tech company', 'platform', 'app development'],
+      secondary: ['digital', 'api', 'data', 'innovation', 'developer']
+    },
+    'Manufacturing': {
+      primary: ['manufacturing', 'factory', 'production facility', 'industrial', 'assembly'],
+      secondary: ['supply chain', 'production', 'machinery', 'materials']
+    },
+    'Retail': {
+      primary: ['retail', 'ecommerce', 'e-commerce', 'online store', 'shopping'],
+      secondary: ['merchandise', 'fashion', 'products', 'customers']
+    },
+    'Education': {
+      primary: ['university', 'school', 'college', 'education', 'academy'],
+      secondary: ['learning', 'student', 'academic', 'curriculum', 'courses']
+    },
+    'Energy': {
+      primary: ['energy', 'power', 'electricity', 'utility', 'grid', 'renewable energy'],
+      secondary: ['transmission', 'distribution', 'generation']
+    },
+    'Real Estate': {
+      primary: ['real estate', 'property management', 'realtor', 'realty'],
+      secondary: ['housing', 'commercial property', 'leasing']
+    },
+    'Legal': {
+      primary: ['law firm', 'legal services', 'attorney', 'lawyer'],
+      secondary: ['litigation', 'court', 'legal']
+    },
+    'Professional Services': {
+      primary: ['consulting', 'advisory', 'professional services'],
+      secondary: ['strategy', 'consulting services']
+    }
   }
 
   let maxScore = 0
   let detectedIndustry = 'Business Services'
 
+  // Check for well-known tech companies first (Apple, Microsoft, Google, etc.)
+  const techGiants = ['apple', 'microsoft', 'google', 'amazon', 'meta', 'facebook', 'tesla', 'nvidia', 'intel', 'amd', 'oracle', 'salesforce', 'adobe', 'ibm', 'cisco', 'dell', 'hp', 'lenovo']
+  if (techGiants.some(company => url.toLowerCase().includes(company) || description.toLowerCase().includes(company))) {
+    console.log('   ✓ Detected as Tech Giant from brand recognition')
+    return 'Technology'
+  }
+
   for (const [industry, keywords] of Object.entries(industryPatterns)) {
-    const score = keywords.filter(kw => combined.includes(kw)).length
+    // Primary keywords worth 3 points, secondary worth 1 point
+    const primaryScore = keywords.primary.filter(kw => combined.includes(kw)).length * 3
+    const secondaryScore = keywords.secondary.filter(kw => combined.includes(kw)).length * 1
+    const score = primaryScore + secondaryScore
+
     if (score > maxScore) {
       maxScore = score
       detectedIndustry = industry
     }
   }
 
+  // Require minimum score threshold to avoid false positives
+  if (maxScore < 3) {
+    console.log(`   ⚠ Industry score too low (${maxScore}), defaulting to Business Services`)
+    return 'Business Services'
+  }
+
+  console.log(`   ✓ Detected industry: ${detectedIndustry} (score: ${maxScore})`)
   return detectedIndustry
 }
 
@@ -938,8 +988,25 @@ function generateMosaicSolution(companyData: CompanyData) {
 
   // If we don't have specific pain points, create INDUSTRY-SPECIFIC ones (not generic invoices/HR)
   if (!hasSpecificPainPoints) {
-    // Create pain points based on their ACTUAL industry and services
-    if (industry === 'Energy' || industry === 'Utilities' || businessContext.mainServices.some(s => s.toLowerCase().includes('energy') || s.toLowerCase().includes('power') || s.toLowerCase().includes('grid'))) {
+    // Create pain points based on their ACTUAL industry and services with more variety
+    if (industry === 'Technology') {
+      // For tech companies, focus on scaling, developer productivity, customer onboarding
+      const techFocus = size === 'enterprise' || size === 'large' ? 'enterprise-scale' : 'growing'
+      if (techFocus === 'enterprise-scale') {
+        painPoints.push(`As ${name} scales globally, manual contract management and approval workflows across departments create bottlenecks that slow deal velocity`)
+        painPoints.push(`Customer onboarding documents—MSAs, SOWs, technical specs—require coordination between sales, legal, and engineering, often delaying time-to-value`)
+        painPoints.push(`${name}'s development and product teams generate extensive documentation that needs instant access across time zones, yet version control and search remain challenging`)
+        solutions.push(`Epicor ECM gives ${name}'s global teams instant access to contracts, technical docs, and customer files with advanced search, automated versioning, and role-based permissions`)
+        solutions.push(`Automated routing moves ${name}'s customer agreements through approval chains in hours instead of weeks, accelerating revenue recognition and improving customer experience`)
+      } else {
+        painPoints.push(`${name}'s rapid growth means more customer contracts, vendor agreements, and internal documents—manual filing systems can't keep pace`)
+        painPoints.push(`Engineering documentation, product specs, and customer implementations are scattered across email, shared drives, and individual computers, making knowledge sharing difficult`)
+        painPoints.push(`As ${name} adds team members, ensuring everyone can find the right document version becomes increasingly time-consuming and error-prone`)
+        solutions.push(`Mosaic's Epicor ECM centralizes ${name}'s critical documents in one searchable repository, ensuring your growing team always finds the latest version instantly`)
+        solutions.push(`Automated workflows route ${name}'s contracts and approvals to the right people automatically, eliminating manual tracking and reducing approval time by 70%`)
+      }
+      console.log(`   ✓ Generated technology company-specific pain points`)
+    } else if (industry === 'Energy' || industry === 'Utilities' || businessContext.mainServices.some(s => s.toLowerCase().includes('energy') || s.toLowerCase().includes('power') || s.toLowerCase().includes('grid'))) {
       painPoints.push(`${name} coordinates complex energy operations across multiple regions, likely managing vast amounts of operational data, compliance reports, and coordination documents manually`)
       painPoints.push(`Real-time grid management and forecasting at ${name} generates continuous documentation flows—outage reports, capacity planning documents, regulatory filings—that require rapid routing and approval`)
       painPoints.push(`With interconnected operations spanning multiple states and utilities, ${name} needs seamless document sharing and workflow coordination to maintain grid reliability and regulatory compliance`)
@@ -953,6 +1020,13 @@ function generateMosaicSolution(companyData: CompanyData) {
       solutions.push(`Epicor ECM provides ${name} with centralized document management and automated retention policies that ensure compliance while reducing administrative burden`)
       solutions.push(`Automated workflow routing and complete audit trails help ${name} respond to public records requests quickly while maintaining transparency and accountability`)
       console.log(`   ✓ Generated government/public sector-specific pain points`)
+    } else if (industry === 'Retail') {
+      painPoints.push(`${name} handles high volumes of purchase orders, invoices, and supplier agreements—manual processing creates payment delays and makes it difficult to negotiate better terms`)
+      painPoints.push(`Inventory and merchandising documentation scattered across systems makes it hard for ${name}'s buying teams to quickly access product specs, vendor contracts, and pricing history`)
+      painPoints.push(`Seasonal spikes in order volume overwhelm ${name}'s manual document workflows, creating fulfillment delays that impact customer satisfaction during peak periods`)
+      solutions.push(`Epicor IDC automatically captures and routes ${name}'s supplier invoices and POs, matching documents to purchase orders and flagging discrepancies—reducing AP processing time by 75%`)
+      solutions.push(`Centralized document access means ${name}'s merchandising and operations teams find vendor contracts, product specs, and compliance documents in seconds, not hours`)
+      console.log(`   ✓ Generated retail-specific pain points`)
     } else if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
       // Only use invoice pain points if finance is detected
       painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
@@ -962,11 +1036,22 @@ function generateMosaicSolution(companyData: CompanyData) {
       solutions.push(`Gain instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that help organizations reduce AP processing time by up to 75%`)
       console.log(`   ✓ Generated finance/AP-specific pain points`)
     } else {
-      // Ultimate fallback for any other industry - document management focus
-      painPoints.push(`${name}'s operations generate significant documentation that requires coordination across teams—manual processes create bottlenecks and limit operational visibility`)
-      painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
-      solutions.push(`Epicor ECM provides ${name} with a single, cloud-accessible repository for all operational documents—searchable in seconds with role-based security and automatic version control`)
-      console.log(`   ✓ Generated general operational pain points`)
+      // Ultimate fallback for any other industry - document management focus with variety based on size
+      const sizeBasedVariation = Math.floor(Math.random() * 3)
+      if (sizeBasedVariation === 0) {
+        painPoints.push(`${name}'s operations generate significant documentation that requires coordination across teams—manual processes create bottlenecks and limit operational visibility`)
+        painPoints.push(`Document version confusion means ${name}'s teams sometimes work from outdated information, leading to errors, rework, and compliance risks`)
+        solutions.push(`Epicor ECM provides ${name} with a single, cloud-accessible repository for all operational documents—searchable in seconds with role-based security and automatic version control`)
+      } else if (sizeBasedVariation === 1) {
+        painPoints.push(`${name}'s teams spend hours each week searching for documents across email, shared drives, and local folders—time that could be spent on higher-value work`)
+        painPoints.push(`Manual document routing and approvals mean ${name}'s critical processes take longer than necessary, impacting customer responsiveness and operational agility`)
+        solutions.push(`Mosaic's intelligent document capture and automated workflows eliminate manual routing at ${name}, ensuring documents reach the right people for approval in minutes, not days`)
+      } else {
+        painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
+        painPoints.push(`Remote and hybrid work make document access even more challenging for ${name}—emails asking "where's that file?" waste time and frustrate employees`)
+        solutions.push(`Cloud-based Epicor ECM gives ${name}'s distributed teams secure, instant access to all documents from anywhere, with advanced search that finds files in seconds`)
+      }
+      console.log(`   ✓ Generated general operational pain points (variation ${sizeBasedVariation})`)
     }
   }
 
@@ -1021,8 +1106,8 @@ function generateMosaicSolution(companyData: CompanyData) {
     solutions.push(`With 25+ years implementing document automation, Mosaic brings deep process expertise to help ${name} design workflows that deliver measurable ROI and lasting efficiency gains`)
   }
 
-  // Generate clean, personal headline and pitch
-  const headline = `Hi ${name}!`
+  // Generate professional, person-focused headline
+  const headline = `Streamline Workflows at ${name}`
 
   // Create industry-aware, personalized subheadline
   let pitch = ''

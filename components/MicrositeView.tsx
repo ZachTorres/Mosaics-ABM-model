@@ -111,19 +111,19 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
     <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
       {/* Hero Section */}
       <div
-        className="relative text-white px-8 md:px-16 py-20 md:py-24"
+        className="relative text-white px-8 md:px-16 py-24 md:py-32"
         style={{
           background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
         }}
       >
-        <div className="max-w-3xl mx-auto text-center">
-          <p className="text-sm uppercase tracking-wider opacity-90 mb-4 font-medium">
+        <div className="max-w-4xl mx-auto text-center">
+          <p className="text-sm uppercase tracking-widest opacity-90 mb-6 font-semibold">
             A Personalized Overview for {microsite.companyName}
           </p>
-          <h1 className="text-3xl md:text-4xl font-semibold mb-6 leading-relaxed">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight tracking-tight">
             {microsite.headline}
           </h1>
-          <p className="text-lg md:text-xl opacity-90 leading-relaxed font-light max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl opacity-95 leading-relaxed font-normal max-w-3xl mx-auto">
             {microsite.subheadline}
           </p>
         </div>
