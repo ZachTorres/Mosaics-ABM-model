@@ -1122,7 +1122,7 @@ function generateMosaicSolution(companyData: CompanyData) {
     pitch = `Mosaic specializes in helping companies like ${name} automate document workflows and eliminate manual processes.`
   }
 
-  const cta = `See Mosaic in Action for ${name}`
+  const cta = `See Mosaic in Action!`
 
   return {
     companyName: name,
