@@ -770,8 +770,8 @@ function generateMosaicSolution(companyData: CompanyData) {
     painPoints.push(`Paper invoices scattered across email, fax, and physical mail make it nearly impossible for ${name} to track approval status, prevent duplicate payments, or maintain audit trails`)
     painPoints.push(`Manual invoice coding and GL distribution at ${name} means AP staff spend hours on repetitive data entry instead of resolving exceptions and managing vendor relationships`)
 
-    solutions.push(`DocStar IDC (Intelligent Data Capture) automatically extracts data from ${name}'s invoices—regardless of format—eliminating 90% of manual entry while learning your coding rules over time`)
-    solutions.push(`With DocStar ECM as your single invoice repository, ${name} gains instant visibility into every invoice's status, automated GL coding, and complete audit trails—helping organizations reduce AP headcount by up to 50% while processing 200+ invoices monthly`)
+    solutions.push(`Epicor IDC (Intelligent Data Capture) automatically extracts data from ${name}'s invoices—regardless of format—eliminating 90% of manual entry while learning your coding rules over time`)
+    solutions.push(`With Epicor ECM as your single invoice repository, ${name} gains instant visibility into every invoice's status, automated GL coding, and complete audit trails—helping organizations reduce AP headcount by up to 50% while processing 200+ invoices monthly`)
     solutions.push(`Our AP Automation integrates directly with ${name}'s ERP system for real-time two-way data synchronization, automatic invoice-to-PO matching, and exception notifications that keep your workflow moving`)
   }
 
@@ -780,7 +780,7 @@ function generateMosaicSolution(companyData: CompanyData) {
     painPoints.push(`Manual sales order processing at ${name} creates delays between order receipt and fulfillment, directly impacting customer satisfaction and your order-to-cash cycle time`)
     painPoints.push(`Order data arriving via email, fax, and EDI requires ${name}'s staff to manually key information into multiple systems, introducing errors that create costly rework and shipping delays`)
 
-    solutions.push(`Mosaic's Sales Order Processing Automation uses DocStar IDC to intelligently capture order data from any source, automatically validate against business rules, and route through customized approval workflows`)
+    solutions.push(`Mosaic's Sales Order Processing Automation uses Epicor IDC to intelligently capture order data from any source, automatically validate against business rules, and route through customized approval workflows`)
     solutions.push(`By integrating directly with ${name}'s ERP system (SYSPRO, Sage Intacct, or others), we eliminate double entry, reduce errors, and accelerate your order-to-cash cycle—helping similar organizations achieve 96% efficiency gains`)
   }
 
@@ -789,7 +789,7 @@ function generateMosaicSolution(companyData: CompanyData) {
     painPoints.push(`${name}'s teams lose productivity searching across email inboxes, shared drives, and filing cabinets for the documents they need—time that should be invested in serving customers and growing the business`)
     painPoints.push(`Without a centralized system, ${name} faces risks from lost documents, unclear version control, and difficulty proving compliance during audits`)
 
-    solutions.push(`DocStar ECM (Enterprise Content Management) provides ${name} with a single, cloud-accessible repository for all business documents—searchable in seconds with role-based security ensuring only authorized staff access sensitive information`)
+    solutions.push(`Epicor ECM (Enterprise Content Management) provides ${name} with a single, cloud-accessible repository for all business documents—searchable in seconds with role-based security ensuring only authorized staff access sensitive information`)
     solutions.push(`Built-in workflow automation routes documents through ${name}'s approval processes automatically, with version control, retention policies, and complete audit trails that turn compliance from a burden into a checkbox`)
   }
 
@@ -807,42 +807,42 @@ function generateMosaicSolution(companyData: CompanyData) {
     painPoints.push(`Compliance audits demand weeks of ${name}'s staff time tracking down documents, reconstructing approval chains, and proving retention policies were followed—taking focus away from revenue-generating activities`)
     painPoints.push(`Without automated audit trails, ${name} struggles to demonstrate who accessed documents, when changes were made, and whether approval workflows were properly followed`)
 
-    solutions.push(`DocStar ECM's immutable audit trail captures every document interaction at ${name}—access, edits, approvals, exports—providing auditors with instant proof of compliance and giving management real-time visibility into process adherence`)
+    solutions.push(`Epicor ECM's immutable audit trail captures every document interaction at ${name}—access, edits, approvals, exports—providing auditors with instant proof of compliance and giving management real-time visibility into process adherence`)
     solutions.push(`Configurable retention policies automatically archive and purge documents based on ${name}'s compliance requirements, with legal holds preventing deletion during litigation—all without manual tracking`)
   }
 
   // Add ERP integration benefit with specific technology mentions and real integrations
   if (hasMicrosoftTech) {
-    solutions.push(`Proven Microsoft Dynamics Integration: Mosaic's 25+ years of experience includes deep integrations with Dynamics 365 Business Central, eliminating double entry between ${name}'s DocStar workflows and financial systems`)
+    solutions.push(`Proven Microsoft Dynamics Integration: Mosaic's 25+ years of experience includes deep integrations with Dynamics 365 Business Central, eliminating double entry between ${name}'s Epicor workflows and financial systems`)
   } else if (hasSYSPROTech) {
-    solutions.push(`Native SYSPRO Integration: We've built specialized connectors between DocStar and ${name}'s SYSPRO ERP, ensuring real-time data synchronization for AP, sales orders, and inventory documents`)
+    solutions.push(`Native SYSPRO Integration: We've built specialized connectors between Epicor and ${name}'s SYSPRO ERP, ensuring real-time data synchronization for AP, sales orders, and inventory documents`)
   } else if (hasSageTech) {
-    solutions.push(`Certified Sage Intacct Integration: Mosaic connects DocStar seamlessly to ${name}'s Sage Intacct system, synchronizing AP invoices, vendor records, and GL coding in real-time`)
+    solutions.push(`Certified Sage Intacct Integration: Mosaic connects Epicor seamlessly to ${name}'s Sage Intacct system, synchronizing AP invoices, vendor records, and GL coding in real-time`)
   } else if (hasSAPTech) {
-    solutions.push(`SAP-Certified Integration: Mosaic's DocStar platform integrates with ${name}'s SAP environment, automatically syncing documents and master data across your enterprise systems`)
+    solutions.push(`SAP-Certified Integration: Mosaic's Epicor platform integrates with ${name}'s SAP environment, automatically syncing documents and master data across your enterprise systems`)
   } else if (hasOtherERP) {
-    solutions.push(`ERP Integration Expertise: With 25+ years in business process automation, Mosaic connects DocStar to ${name}'s existing ERP (NetSuite, QuickBooks, or others), eliminating double entry and data discrepancies`)
+    solutions.push(`ERP Integration Expertise: With 25+ years in business process automation, Mosaic connects Epicor to ${name}'s existing ERP (NetSuite, QuickBooks, or others), eliminating double entry and data discrepancies`)
   } else {
-    solutions.push(`Flexible ERP Integration: Mosaic specializes in connecting DocStar to ${name}'s existing business systems through proven APIs and integration methods, ensuring data flows seamlessly without disrupting current operations`)
+    solutions.push(`Flexible ERP Integration: Mosaic specializes in connecting Epicor to ${name}'s existing business systems through proven APIs and integration methods, ensuring data flows seamlessly without disrupting current operations`)
   }
 
   // Industry-specific additions with authentic Mosaic vertical solutions
   if (industry === 'Healthcare') {
     painPoints.push(`Healthcare regulations like HIPAA create immense compliance burdens for ${name}, requiring meticulous documentation of who accessed patient records, when, and why—something manual processes can't reliably deliver`)
-    solutions.push(`Mosaic's healthcare-compliant DocStar workflows ensure ${name} meets HIPAA requirements with encrypted storage, role-based access controls, automatic audit logging, and patient consent tracking`)
+    solutions.push(`Mosaic's healthcare-compliant Epicor workflows ensure ${name} meets HIPAA requirements with encrypted storage, role-based access controls, automatic audit logging, and patient consent tracking`)
   } else if (industry === 'Manufacturing') {
     painPoints.push(`${name}'s manufacturing operations generate constant document flows—purchase orders, packing slips, quality certifications, BOMs—that must move rapidly through approvals to avoid production delays`)
     painPoints.push(`Supply chain complexity means ${name} needs to match POs against receipts, track certifications, and maintain traceability documentation—manual processes can't keep pace with modern manufacturing`)
     solutions.push(`Mosaic's Freight & Logistics Automation processes ${name}'s shipping documents automatically, matching POs to receipts, flagging discrepancies, and updating inventory systems in real-time`)
   } else if (industry === 'Financial Services') {
     painPoints.push(`${name} operates under strict regulatory scrutiny requiring perfect document retention, immutable audit trails, and instant retrieval during examinations—risks that manual filing systems multiply exponentially`)
-    solutions.push(`DocStar ECM delivers bank-grade security for ${name} with encryption at rest and in transit, immutable audit trails, granular permissions, and configurable retention that automatically enforces regulatory requirements`)
+    solutions.push(`Epicor ECM delivers bank-grade security for ${name} with encryption at rest and in transit, immutable audit trails, granular permissions, and configurable retention that automatically enforces regulatory requirements`)
   } else if (industry === 'Education') {
     painPoints.push(`${name} manages student records, enrollment forms, financial aid documents, and compliance paperwork across departments—creating data silos and making it difficult to serve students efficiently`)
     solutions.push(`Mosaic helps education institutions like ${name} centralize student documents with secure, role-based access that lets advisors, financial aid, and registrar staff collaborate while protecting student privacy`)
   } else if (industry === 'Professional Services') {
     painPoints.push(`For professional services firms like ${name}, billable hours lost to administrative tasks—filing documents, tracking approvals, searching for client files—directly impact profitability and client service levels`)
-    solutions.push(`DocStar ECM gives ${name}'s professionals instant access to client documents from anywhere, with automated workflows handling routine approvals so your team can focus on delivering client value`)
+    solutions.push(`Epicor ECM gives ${name}'s professionals instant access to client documents from anywhere, with automated workflows handling routine approvals so your team can focus on delivering client value`)
   }
 
   // Add a few more relevant pain points if we don't have enough
@@ -855,18 +855,26 @@ function generateMosaicSolution(companyData: CompanyData) {
 
   // Add customization differentiator if we need more solutions
   if (solutions.length < 4) {
-    solutions.push(`Unlike one-size-fits-all platforms, Mosaic customizes DocStar's workflow automation to match ${name}'s specific business rules, approval hierarchies, and operational needs—not forcing you to change how you work`)
+    solutions.push(`Unlike one-size-fits-all platforms, Mosaic customizes Epicor's workflow automation to match ${name}'s specific business rules, approval hierarchies, and operational needs—not forcing you to change how you work`)
   }
   if (solutions.length < 4) {
     solutions.push(`With 25+ years of experience and deep business process expertise, Mosaic doesn't just implement software—we partner with ${name} to understand your workflows and design automation that delivers measurable ROI`)
   }
 
-  // Generate personalized headline and pitch with softer, consultative approach
-  const headline = `Streamlining Operations for ${name}`
+  // Generate clean, personal headline and pitch
+  const headline = `Hi ${name}`
 
-  const pitch = `We understand the unique challenges ${size === 'enterprise' ? 'enterprise organizations' : 'growing companies'} like ${name} face. For over 25 years, Mosaic has helped organizations eliminate manual processes and paperwork bottlenecks. Our DocStar platform combines intelligent document capture, enterprise content management, and workflow automation to make your team more efficient—so you can focus on what matters most.`
+  // Create industry-aware, personalized subheadline
+  let pitch = ''
+  if (industry && industry !== 'Business Services') {
+    pitch = `We work with ${industry.toLowerCase()} companies to reduce paperwork and manual processes.`
+  } else if (businessContext.mainServices.length > 0 && businessContext.mainServices[0] !== 'Business Services') {
+    pitch = `We help companies in ${businessContext.mainServices[0].toLowerCase()} spend less time on administrative work.`
+  } else {
+    pitch = `We help companies like yours spend less time on paperwork and manual processes.`
+  }
 
-  const cta = `Let's Explore Solutions Together`
+  const cta = `Let's Talk`
 
   return {
     companyName: name,
