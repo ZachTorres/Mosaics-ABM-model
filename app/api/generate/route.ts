@@ -20,6 +20,11 @@ interface CompanyData {
     specificOfferings: string[]
     valueProps: string[]
     technologies: string[]
+    // Deep analysis fields
+    explicitChallenges: string[]
+    customerTypes: string[]
+    specificWorkflows: string[]
+    problemsTheySolve: string[]
   }
   size: 'small' | 'medium' | 'large' | 'enterprise'
 }
@@ -51,13 +56,13 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     console.log(`✅ Found company: ${companyName}`)
     console.log(`📝 Description: ${description.substring(0, 100)}...`)
 
-    // Find and scrape additional pages for deeper context
+    // Find and scrape additional pages for DEEP context
     const additionalPages = await findKeyPages($, url)
     console.log(`🔗 Found ${additionalPages.length} additional pages to scrape`)
 
-    // Scrape up to 3 additional pages for context
+    // Scrape up to 6 additional pages for comprehensive analysis
     const allPageData = [homeData]
-    for (const pageUrl of additionalPages.slice(0, 3)) {
+    for (const pageUrl of additionalPages.slice(0, 6)) {
       try {
         const pageData = await scrapePage(pageUrl)
         allPageData.push(pageData)
@@ -71,10 +76,23 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     const combinedText = allPageData.map(p => p.text).join(' ').toLowerCase()
     const combinedHeadings = allPageData.map(p => p.headings).join(' ').toLowerCase()
 
-    console.log(`📊 Analyzed ${combinedText.split(' ').length} words across ${allPageData.length} pages`)
+    // Extract full paragraphs for deeper context analysis
+    const allParagraphs = allPageData.flatMap(p => {
+      const paragraphs: string[] = []
+      p.$('p, li, div.description, div.content').each((_, el) => {
+        const text = p.$(el).text().trim()
+        if (text.length > 50 && text.length < 500) {
+          paragraphs.push(text)
+        }
+      })
+      return paragraphs
+    })
 
-    // Deep analysis of business context
-    const businessContext = analyzeBusinessContext(combinedText, combinedHeadings, description, companyName)
+    console.log(`📊 Analyzed ${combinedText.split(' ').length} words across ${allPageData.length} pages`)
+    console.log(`📝 Extracted ${allParagraphs.length} content paragraphs for deep analysis`)
+
+    // ENHANCED: Deep analysis with full paragraph context
+    const businessContext = analyzeBusinessContext(combinedText, combinedHeadings, description, companyName, allParagraphs)
 
     // Detect industry with deep analysis
     const industry = detectIndustryDeep(url, description, combinedHeadings, combinedText, businessContext)
@@ -173,11 +191,12 @@ function findKeyPages($: cheerio.CheerioAPI, baseUrl: string): string[] {
   return keyPages
 }
 
-// Analyze business context from page content
-function analyzeBusinessContext(pageText: string, headings: string, description: string, companyName: string): CompanyData['businessContext'] {
+// Analyze business context from page content with DEEP paragraph analysis
+function analyzeBusinessContext(pageText: string, headings: string, description: string, companyName: string, paragraphs: string[]): CompanyData['businessContext'] {
   const combined = `${pageText} ${headings} ${description}`.toLowerCase()
 
-  console.log(`🔬 Analyzing business context for ${companyName}...`)
+  console.log(`🔬 Deep analyzing business context for ${companyName}...`)
+  console.log(`📝 Analyzing ${paragraphs.length} content paragraphs for specific insights...`)
 
   // Detect main services/offerings
   const serviceKeywords = {
@@ -291,7 +310,101 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
     }
   })
 
-  console.log(`  ✓ Found ${mainServices.length} services, ${keyOperations.length} operations, ${specificOfferings.length} specific offerings`)
+  // ENHANCED: Deep paragraph analysis for SPECIFIC problems and challenges
+  const explicitChallenges: string[] = []
+  const customerTypes: string[] = []
+  const specificWorkflows: string[] = []
+  const problemsTheySolve: string[] = []
+
+  // Analyze each paragraph for explicit mentions of problems, challenges, customers
+  paragraphs.forEach(para => {
+    const paraLower = para.toLowerCase()
+
+    // Extract explicit challenges they mention (what their customers struggle with)
+    const challengePatterns = [
+      /(?:challenges?|problems?|issues?|struggles?|difficulties?|pain points?)[:\s]+([^.!?]{20,200})/gi,
+      /(?:struggling with|dealing with|facing|encountering)[:\s]+([^.!?]{20,150})/gi,
+      /without\s+(?:our|a|the)\s+(?:solution|platform|system|service)[,\s]+([^.!?]{20,150})/gi,
+      /(?:inefficient|manual|time-consuming|costly|complex|difficult)\s+([^.!?]{15,120})/gi
+    ]
+
+    challengePatterns.forEach(pattern => {
+      const matches = paraLower.matchAll(pattern)
+      for (const match of matches) {
+        if (match[1]) {
+          const challenge = match[1].trim()
+          // Only include if it seems like a real business problem
+          if (challenge.includes('process') || challenge.includes('workflow') ||
+              challenge.includes('manual') || challenge.includes('data') ||
+              challenge.includes('document') || challenge.includes('invoice') ||
+              challenge.includes('order') || challenge.includes('track') ||
+              challenge.includes('manage') || challenge.includes('time')) {
+            explicitChallenges.push(challenge)
+          }
+        }
+      }
+    })
+
+    // Extract WHO they serve (their customer types)
+    const customerPatterns = [
+      /(?:we (?:help|serve|work with|support))\s+([^.!?]{10,80})/gi,
+      /(?:for|serving)\s+([a-z\s]+(?:companies|businesses|organizations|manufacturers|retailers|providers|firms))/gi,
+      /(?:industries|sectors|verticals)[:\s]+([^.!?]{10,100})/gi
+    ]
+
+    customerPatterns.forEach(pattern => {
+      const matches = paraLower.matchAll(pattern)
+      for (const match of matches) {
+        if (match[1]) {
+          customerTypes.push(match[1].trim())
+        }
+      }
+    })
+
+    // Extract specific workflows or processes they mention
+    const workflowPatterns = [
+      /([a-z\s]+(?:process|workflow|procedure|system)(?:es)?)/gi,
+      /(?:automate|streamline|manage|track|process)\s+([^.!?]{10,60})/gi
+    ]
+
+    workflowPatterns.forEach(pattern => {
+      const matches = paraLower.matchAll(pattern)
+      for (const match of matches) {
+        if (match[1]) {
+          const workflow = match[1].trim()
+          if (workflow.length > 10 && workflow.length < 80) {
+            specificWorkflows.push(workflow)
+          }
+        }
+      }
+    })
+
+    // Extract what problems THEY solve (shows what their customers need)
+    const solutionPatterns = [
+      /(?:eliminates?|removes?|solves?|fixes?|addresses?)\s+([^.!?]{15,100})/gi,
+      /(?:reduces?|cuts?|minimizes?)\s+([^.!?]{15,100})/gi,
+      /(?:no more|stop|avoid|prevent)\s+([^.!?]{15,100})/gi
+    ]
+
+    solutionPatterns.forEach(pattern => {
+      const matches = paraLower.matchAll(pattern)
+      for (const match of matches) {
+        if (match[1]) {
+          problemsTheySolve.push(match[1].trim())
+        }
+      }
+    })
+  })
+
+  // Deduplicate and filter
+  const uniqueChallenges = [...new Set(explicitChallenges)].filter(c => c.length > 20 && c.length < 200)
+  const uniqueCustomers = [...new Set(customerTypes)].filter(c => c.length > 5 && c.length < 100)
+  const uniqueWorkflows = [...new Set(specificWorkflows)].filter(w => w.length > 10 && w.length < 80)
+  const uniqueProblems = [...new Set(problemsTheySolve)].filter(p => p.length > 15 && p.length < 120)
+
+  console.log(`  ✓ Found ${mainServices.length} services, ${keyOperations.length} operations, ${specificOfferings.length} offerings`)
+  console.log(`  ✓ Extracted ${uniqueChallenges.length} explicit challenges, ${uniqueCustomers.length} customer types`)
+  console.log(`  ✓ Identified ${uniqueWorkflows.length} specific workflows, ${uniqueProblems.length} problems they solve`)
 
   return {
     mainServices: mainServices.length > 0 ? mainServices : ['Business Services'],
@@ -299,9 +412,14 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
     painPoints: painPoints.length > 0 ? painPoints : ['Manual workflow inefficiencies'],
     departments,
     contentThemes,
-    specificOfferings: specificOfferings.slice(0, 3), // Top 3 most relevant
-    valueProps: valueProps.slice(0, 3), // Top 3 value propositions
-    technologies: technologies.slice(0, 5) // Top 5 technologies mentioned
+    specificOfferings: specificOfferings.slice(0, 3),
+    valueProps: valueProps.slice(0, 3),
+    technologies: technologies.slice(0, 5),
+    // NEW: Deep insights from paragraph analysis
+    explicitChallenges: uniqueChallenges.slice(0, 5),
+    customerTypes: uniqueCustomers.slice(0, 5),
+    specificWorkflows: uniqueWorkflows.slice(0, 5),
+    problemsTheySolve: uniqueProblems.slice(0, 5)
   }
 }
 
@@ -737,7 +855,11 @@ function getFallbackData(url: string): CompanyData {
       contentThemes: ['efficiency'],
       specificOfferings: [],
       valueProps: [],
-      technologies: []
+      technologies: [],
+      explicitChallenges: [],
+      customerTypes: [],
+      specificWorkflows: [],
+      problemsTheySolve: []
     },
     size: 'medium'
   }
@@ -751,6 +873,44 @@ function generateMosaicSolution(companyData: CompanyData) {
   const painPoints: string[] = []
   const solutions: string[] = []
 
+  console.log(`\n🎯 Generating ultra-targeted pain points for ${name}...`)
+  console.log(`   Using ${businessContext.explicitChallenges.length} explicit challenges found on their site`)
+  console.log(`   Using ${businessContext.specificWorkflows.length} specific workflows identified`)
+  console.log(`   Using ${businessContext.problemsTheySolve.length} problems they currently solve`)
+
+  // PRIORITY 1: Use EXPLICIT challenges found on their website for ultra-specific pain points
+  if (businessContext.explicitChallenges.length > 0) {
+    businessContext.explicitChallenges.slice(0, 2).forEach(challenge => {
+      // Mirror their challenge back to them with our solution angle
+      const painPoint = `Like many in ${industry.toLowerCase()}, ${name} faces ${challenge}—a perfect scenario for document automation`
+      painPoints.push(painPoint)
+      console.log(`   ✓ Added explicit challenge: "${challenge.substring(0, 60)}..."`)
+    })
+  }
+
+  // PRIORITY 2: Use specific workflows they mention to create targeted pain points
+  if (businessContext.specificWorkflows.length > 0) {
+    businessContext.specificWorkflows.slice(0, 2).forEach(workflow => {
+      if (workflow.includes('invoice') || workflow.includes('ap') || workflow.includes('payable')) {
+        painPoints.push(`${name}'s ${workflow} likely involves significant manual work that could be automated with intelligent document capture`)
+      } else if (workflow.includes('order') || workflow.includes('fulfillment')) {
+        painPoints.push(`Manual handling of ${workflow} at ${name} creates delays that impact customer satisfaction and operational efficiency`)
+      } else {
+        painPoints.push(`${name}'s ${workflow} could benefit from automation to reduce errors and speed up cycle times`)
+      }
+      console.log(`   ✓ Added workflow-based pain point: "${workflow}"`)
+    })
+  }
+
+  // PRIORITY 3: Use problems THEY solve (their customers' pain = what they likely have too)
+  if (businessContext.problemsTheySolve.length > 0) {
+    const firstProblem = businessContext.problemsTheySolve[0]
+    if (firstProblem.includes('time') || firstProblem.includes('manual') || firstProblem.includes('paper') || firstProblem.includes('process')) {
+      painPoints.push(`While ${name} helps customers ${firstProblem}, internal document processes may still rely on manual methods that slow down operations`)
+      console.log(`   ✓ Added mirror pain point based on what they solve`)
+    }
+  }
+
   // Check for technologies to personalize solutions
   const hasMicrosoftTech = businessContext.technologies.some(t => t.includes('microsoft') || t.includes('dynamics'))
   const hasSAPTech = businessContext.technologies.some(t => t.includes('sap'))
@@ -758,7 +918,7 @@ function generateMosaicSolution(companyData: CompanyData) {
   const hasSageTech = businessContext.technologies.some(t => t.includes('sage') || t.includes('intacct'))
   const hasOtherERP = businessContext.technologies.some(t => t.includes('netsuite') || t.includes('erp'))
 
-  // AP/Invoice Processing - detailed and specific
+  // AP/Invoice Processing - detailed and specific (ONLY if not already covered above)
   if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
     painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
     painPoints.push(`Paper invoices arriving via email, fax, and mail make it nearly impossible to track approval status or prevent duplicate payments—forcing staff to manually chase down documents`)
