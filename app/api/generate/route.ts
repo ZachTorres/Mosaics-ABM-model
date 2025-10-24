@@ -106,6 +106,7 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     console.log(`✨ Analysis complete!`)
     console.log(`   Industry: ${industry}`)
     console.log(`   Size: ${size}`)
+    console.log(`   Colors: Primary=${colors.primary}, Secondary=${colors.secondary}, Accent=${colors.accent}`)
     console.log(`   Services: ${businessContext.mainServices.join(', ')}`)
     console.log(`   Operations: ${businessContext.keyOperations.join(', ')}`)
 
@@ -1108,6 +1109,8 @@ function generateMosaicSolution(companyData: CompanyData) {
 
   // Generate professional, person-focused headline
   const headline = `Streamline Workflows at ${name}`
+  console.log(`✨ Generated headline: "${headline}"`)
+  console.log(`✨ Generated for company: ${name}, Industry: ${industry}`)
 
   // Create industry-aware, personalized subheadline
   let pitch = ''
