@@ -37,12 +37,15 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     const html = await response.text()
     const $ = cheerio.load(html)
 
-    // Extract company name
-    const companyName =
+    // Extract company name and clean it
+    let companyName =
       $('meta[property="og:site_name"]').attr('content') ||
       $('meta[name="application-name"]').attr('content') ||
       $('title').text().split('|')[0].split('-')[0].trim() ||
       extractCompanyNameFromUrl(url)
+
+    // Remove .com, .net, .org etc from company name
+    companyName = companyName.replace(/\.(com|net|org|io|co|ai|app|dev)$/i, '').trim()
 
     // Extract description
     const description =
