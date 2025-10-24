@@ -111,113 +111,80 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
     <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
       {/* Hero Section */}
       <div
-        className="relative text-white px-8 md:px-16 py-16 md:py-20"
+        className="relative text-white px-8 md:px-16 py-20 md:py-24"
         style={{
           background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
         }}
       >
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-sm uppercase tracking-wider opacity-90 mb-4 font-medium">
+            A Personalized Overview for {microsite.companyName}
+          </p>
+          <h1 className="text-3xl md:text-4xl font-semibold mb-6 leading-relaxed">
             {microsite.headline}
           </h1>
-          <p className="text-xl md:text-2xl opacity-95 leading-relaxed">
+          <p className="text-lg md:text-xl opacity-90 leading-relaxed font-light max-w-2xl mx-auto">
             {microsite.subheadline}
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="px-8 md:px-16 py-12 md:py-16">
+      <div className="px-8 md:px-16 py-16 md:py-20">
         <div className="max-w-4xl mx-auto">
+          {/* Introduction */}
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-3xl font-light text-gray-800 mb-4">
+              How We Can Help
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              We've worked with organizations facing similar opportunities. Here's what might be relevant for {microsite.companyName}.
+            </p>
+          </div>
+
           {/* Challenges & Solutions Grid */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 mb-12">
+          <div className="grid md:grid-cols-2 gap-12 md:gap-16 mb-16">
             {/* Challenges */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="text-red-500">⚠️</span>
-                Your Challenges
-              </h2>
-              <div className="space-y-4">
-                {microsite.painPoints.slice(0, 4).map((point, idx) => (
-                  <div key={idx} className="flex items-start bg-red-50 p-4 rounded-lg border border-red-100">
-                    <svg
-                      className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5 text-red-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-gray-800 font-medium leading-relaxed">{point}</p>
+            <div className="bg-gray-50 rounded-xl p-8">
+              <h3 className="text-xl font-medium text-gray-800 mb-6">
+                Common Challenges
+              </h3>
+              <div className="space-y-5">
+                {microsite.painPoints.slice(0, 3).map((point, idx) => (
+                  <div key={idx} className="flex items-start">
+                    <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2.5 mr-4 opacity-40" style={{ backgroundColor: microsite.colors.primary }}></div>
+                    <p className="text-gray-600 leading-relaxed text-sm">{point}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Solutions */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="text-green-500">✓</span>
-                Our Solutions
-              </h2>
-              <div className="space-y-4">
-                {microsite.solutions.slice(0, 4).map((solution, idx) => (
-                  <div key={idx} className="flex items-start bg-green-50 p-4 rounded-lg border border-green-100">
-                    <svg
-                      className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-gray-800 font-medium leading-relaxed">{solution}</p>
+            <div className="bg-gray-50 rounded-xl p-8">
+              <h3 className="text-xl font-medium text-gray-800 mb-6">
+                What We Offer
+              </h3>
+              <div className="space-y-5">
+                {microsite.solutions.slice(0, 3).map((solution, idx) => (
+                  <div key={idx} className="flex items-start">
+                    <div className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2.5 mr-4 opacity-40" style={{ backgroundColor: microsite.colors.accent }}></div>
+                    <p className="text-gray-600 leading-relaxed text-sm">{solution}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Prominent CTA Section */}
-          <div className="mt-12 pt-12 border-t border-gray-200">
-            <div className="text-center bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl border-2 border-blue-200">
-              <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                {microsite.cta}
-              </h3>
-              <p className="text-gray-700 mb-8 text-lg">
-                Schedule a personalized demo to see how Mosaic can transform {microsite.companyName}'s operations
-              </p>
-              <a
-                href="#contact-form"
-                className="inline-flex items-center gap-3 px-10 py-5 text-white text-xl font-bold rounded-xl transition-all shadow-2xl hover:shadow-xl transform hover:scale-105 hover:-translate-y-1"
-                style={{
-                  background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
-                }}
-                onClick={(e) => {
-                  e.preventDefault()
-                  document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })
-                }}
-              >
-                <span>Get Your Free Demo</span>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </a>
-              <p className="text-sm text-gray-600 mt-4">
-                No credit card required • 30-minute consultation • See results in real-time
-              </p>
-            </div>
-          </div>
 
           {/* Contact Form */}
           {showContactForm && (
-            <div id="contact-form" className="border-t border-gray-200 pt-12 mt-12 scroll-mt-8">
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                  Get Started Today
+            <div id="contact-form" className="border-t border-gray-200 pt-16 mt-4">
+              <div className="text-center mb-10">
+                <h2 className="text-2xl font-light text-gray-800 mb-3">
+                  {microsite.cta}
                 </h2>
-                <p className="text-lg text-gray-600">
-                  Fill out the form below and we'll be in touch shortly
+                <p className="text-gray-600">
+                  We'd be happy to discuss how we might be able to help
                 </p>
               </div>
 

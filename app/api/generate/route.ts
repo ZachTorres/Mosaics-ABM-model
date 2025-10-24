@@ -566,12 +566,12 @@ function generateMosaicSolution(companyData: CompanyData) {
     solutions.push(`Mosaic's customized workflow automation is designed specifically for ${name}'s business rules and processes, not a one-size-fits-all solution`)
   }
 
-  // Generate personalized headline and pitch
-  const headline = `Transform ${name}'s Workflow Automation with DocStar ECM & IDC`
+  // Generate personalized headline and pitch with softer, consultative approach
+  const headline = `Streamlining Operations for ${name}`
 
-  const pitch = `${name} ${businessContext.mainServices.length > 0 ? 'is focused on ' + businessContext.mainServices[0].toLowerCase() : 'has unique operational needs'}, but manual processes are holding your team back. Mosaic's DocStar platform—combining Intelligent Data Capture (IDC) and Enterprise Content Management (ECM)—eliminates the paper-based workflows, manual data entry, and document chaos that waste your team's time. We've helped ${size === 'enterprise' ? 'Fortune 500 companies' : 'companies like yours'} reduce AP processing time by 80%, cut document retrieval time from hours to seconds, and achieve complete compliance visibility—all while integrating seamlessly with your existing systems.`
+  const pitch = `We understand the unique challenges ${size === 'enterprise' ? 'enterprise organizations' : 'growing companies'} like ${name} face. Our DocStar platform is designed to make your team's work easier—helping you manage documents, automate workflows, and focus on what matters most.`
 
-  const cta = `See How DocStar Can Transform ${name}'s Operations`
+  const cta = `Let's Explore Solutions Together`
 
   return {
     companyName: name,
