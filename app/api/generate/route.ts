@@ -747,74 +747,99 @@ function getFallbackData(url: string): CompanyData {
 function generateMosaicSolution(companyData: CompanyData) {
   const { name, industry, businessContext, size } = companyData
 
-  // Build simple, direct pain points and solutions
+  // Build detailed, specific pain points and solutions that demonstrate research
   const painPoints: string[] = []
   const solutions: string[] = []
 
   // Check for technologies to personalize solutions
   const hasMicrosoftTech = businessContext.technologies.some(t => t.includes('microsoft') || t.includes('dynamics'))
   const hasSAPTech = businessContext.technologies.some(t => t.includes('sap'))
+  const hasSYSPROTech = businessContext.technologies.some(t => t.includes('syspro'))
   const hasSageTech = businessContext.technologies.some(t => t.includes('sage') || t.includes('intacct'))
+  const hasOtherERP = businessContext.technologies.some(t => t.includes('netsuite') || t.includes('erp'))
 
-  // AP/Invoice Processing (most common)
+  // AP/Invoice Processing - detailed and specific
   if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
-    painPoints.push(`Manual invoice processing creates delays and errors`)
-    solutions.push(`Automatically capture and process invoices`)
+    painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
+    painPoints.push(`Paper invoices arriving via email, fax, and mail make it nearly impossible to track approval status or prevent duplicate payments—forcing staff to manually chase down documents`)
+
+    solutions.push(`Epicor IDC automatically captures invoice data from any format (paper, email, PDF) and intelligently routes them through approval workflows—eliminating 90% of manual data entry`)
+    solutions.push(`Gain instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that help organizations reduce AP processing time by up to 75%`)
   }
 
-  // Order Processing
+  // Order Processing - detailed outcomes
   if (businessContext.keyOperations.includes('Order Management')) {
-    painPoints.push(`Manual order entry slows down fulfillment`)
-    solutions.push(`Automate order processing from any source`)
+    painPoints.push(`Manual sales order entry at ${name} creates delays between order receipt and fulfillment, directly impacting customer satisfaction and your order-to-cash cycle`)
+
+    solutions.push(`Epicor IDC intelligently captures order data from any source (email, EDI, fax), validates against business rules, and auto-populates your ERP—reducing order processing time by 96%`)
   }
 
-  // Document Management (most universal)
+  // Document Management - universal but specific
   if (businessContext.keyOperations.includes('Document Management') || businessContext.painPoints.includes('Paper-based workflows causing inefficiencies')) {
-    painPoints.push(`Wasting time searching for documents`)
-    solutions.push(`Find any document in seconds`)
+    painPoints.push(`${name}'s teams waste valuable hours searching for documents across email, shared drives, and filing cabinets—time that should be spent on strategic work that drives growth`)
+    painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
+
+    solutions.push(`Epicor ECM provides a single, cloud-accessible repository where ${name}'s team can find any document in seconds with powerful search, role-based security, and automatic version control`)
+    solutions.push(`Built-in workflow automation routes documents through approval processes automatically, with retention policies and complete audit trails turning compliance from a burden into a simple checkbox`)
   }
 
-  // HR/Payroll
+  // HR/Payroll - detailed specifics
   if (businessContext.keyOperations.includes('HR/Payroll') || businessContext.departments.includes('HR')) {
-    painPoints.push(`Too much HR paperwork`)
-    solutions.push(`Digitize employee documents and workflows`)
+    painPoints.push(`${name}'s HR team is buried in paperwork—I-9 forms, benefits enrollments, performance reviews, PTO requests—consuming hours better spent on talent development and employee engagement`)
+
+    solutions.push(`Mosaic digitizes ${name}'s entire employee lifecycle with secure document storage, automated workflows, and self-service portals—organizations process 2,000+ HR documents daily with ROI under 18 months`)
   }
 
-  // Compliance
+  // Compliance - specific capabilities
   if (businessContext.keyOperations.includes('Compliance/Regulatory') || industry === 'Healthcare' || industry === 'Financial Services') {
-    painPoints.push(`Audits take weeks to prepare`)
-    solutions.push(`Complete audit trails built in`)
+    painPoints.push(`Compliance audits consume weeks of ${name}'s staff time tracking down documents, reconstructing approval chains, and proving policies were followed—pulling focus from revenue-generating work`)
+
+    solutions.push(`Epicor ECM's immutable audit trail captures every document interaction—who accessed it, when changes were made, approval workflows followed—giving auditors instant proof of compliance`)
   }
 
-  // ERP Integration
+  // ERP Integration - detailed and technology-specific
   if (hasMicrosoftTech) {
-    solutions.push(`Integrates with Microsoft Dynamics`)
-  } else if (hasSAPTech) {
-    solutions.push(`Connects to SAP`)
+    solutions.push(`Proven Microsoft Dynamics Integration: Mosaic's deep expertise with Dynamics 365 Business Central ensures seamless two-way synchronization between ${name}'s Epicor workflows and financial systems`)
+  } else if (hasSYSPROTech) {
+    solutions.push(`Native SYSPRO Integration: Specialized connectors sync ${name}'s Epicor documents with SYSPRO ERP in real-time—AP invoices, sales orders, and inventory documents flow automatically`)
   } else if (hasSageTech) {
-    solutions.push(`Works with Sage Intacct`)
+    solutions.push(`Certified Sage Intacct Integration: Epicor connects directly to ${name}'s Sage Intacct, automatically syncing AP invoices, vendor records, and GL coding with zero double-entry`)
+  } else if (hasSAPTech) {
+    solutions.push(`SAP-Certified Integration: Epicor integrates seamlessly with ${name}'s SAP environment, syncing documents and master data across enterprise systems with proven reliability`)
+  } else if (hasOtherERP) {
+    solutions.push(`ERP Integration Expertise: With 25+ years in automation, Mosaic connects Epicor to ${name}'s ERP (NetSuite, QuickBooks, or others) through proven APIs that eliminate double-entry`)
   } else {
-    solutions.push(`Connects to your existing systems`)
+    solutions.push(`Flexible System Integration: Mosaic specializes in connecting Epicor to ${name}'s existing business systems, ensuring documents and data flow seamlessly without disrupting operations`)
   }
 
-  // Industry-specific (keep simple)
+  // Industry-specific - detailed and valuable
   if (industry === 'Healthcare') {
-    painPoints.push(`HIPAA compliance is complex`)
-    solutions.push(`Built-in HIPAA compliance`)
+    painPoints.push(`HIPAA regulations require ${name} to meticulously document who accessed patient records, when, and why—something manual processes simply cannot deliver reliably`)
+    solutions.push(`Healthcare-compliant workflows ensure ${name} meets HIPAA requirements with encrypted storage, role-based access, automatic audit logging, and patient consent tracking built in`)
   } else if (industry === 'Manufacturing') {
-    painPoints.push(`Production delays from slow approvals`)
-    solutions.push(`Route documents instantly`)
+    painPoints.push(`${name}'s manufacturing operations generate constant document flows—POs, packing slips, quality certs, BOMs—that must move rapidly through approvals to prevent production delays`)
+    solutions.push(`Freight & Logistics Automation processes ${name}'s shipping documents instantly, auto-matching POs to receipts, flagging discrepancies, and updating inventory systems in real-time`)
   } else if (industry === 'Financial Services') {
-    painPoints.push(`Strict regulatory requirements`)
-    solutions.push(`Bank-grade security and audit trails`)
+    painPoints.push(`${name} operates under strict regulatory scrutiny requiring perfect document retention, immutable audit trails, and instant retrieval during examinations`)
+    solutions.push(`Bank-grade security with encryption at rest and in transit, immutable audit trails, granular permissions, and automated retention policies that enforce ${name}'s regulatory compliance`)
+  } else if (industry === 'Education') {
+    painPoints.push(`${name} manages student records, enrollment forms, financial aid documents, and compliance paperwork across departments—creating silos that make it difficult to serve students efficiently`)
+    solutions.push(`Centralized student document repository with secure, role-based access lets ${name}'s advisors, financial aid, and registrar staff collaborate while protecting student privacy`)
   }
 
-  // Simple fallbacks if needed
-  if (painPoints.length < 3) {
-    painPoints.push(`Manual processes waste time`)
+  // Thoughtful fallbacks that still show value
+  if (painPoints.length < 4) {
+    painPoints.push(`Manual, paper-based workflows mean ${name}'s talented staff spend hours on repetitive tasks instead of the strategic work that drives competitive advantage`)
   }
-  if (solutions.length < 3) {
-    solutions.push(`Automate your workflows`)
+  if (painPoints.length < 4) {
+    painPoints.push(`As ${name} grows, manual processes don't scale—adding more people to handle paperwork creates a costly cycle that limits margins and growth potential`)
+  }
+
+  if (solutions.length < 4) {
+    solutions.push(`Unlike one-size-fits-all platforms, Mosaic customizes Epicor to match ${name}'s specific business rules, approval hierarchies, and workflows—not forcing you to change how you work`)
+  }
+  if (solutions.length < 4) {
+    solutions.push(`With 25+ years implementing document automation, Mosaic brings deep process expertise to help ${name} design workflows that deliver measurable ROI and lasting efficiency gains`)
   }
 
   // Generate clean, personal headline and pitch
@@ -839,8 +864,8 @@ function generateMosaicSolution(companyData: CompanyData) {
     description: companyData.description,
     headline,
     subheadline: pitch,
-    painPoints: painPoints.slice(0, 3), // Top 3 most relevant
-    solutions: solutions.slice(0, 3), // Top 3 solutions
+    painPoints: painPoints.slice(0, 5), // Top 5 most relevant - detailed to show research
+    solutions: solutions.slice(0, 5), // Top 5 solutions - comprehensive and specific
     colors: companyData.colors,
     cta
   }
