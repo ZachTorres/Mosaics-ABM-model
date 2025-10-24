@@ -818,7 +818,7 @@ function generateMosaicSolution(companyData: CompanyData) {
   }
 
   // Generate clean, personal headline and pitch
-  const headline = `Hi ${name}`
+  const headline = `Hi ${name}!`
 
   // Create industry-aware, personalized subheadline
   let pitch = ''
