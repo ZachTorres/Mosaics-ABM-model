@@ -32,13 +32,32 @@ interface CompanyData {
 // Enhanced multi-page scraping for deep company understanding
 async function deepScrapeCompany(url: string): Promise<CompanyData> {
   try {
-    console.log(`\n🔍 Starting deep scrape of ${url}...`)
+    console.log(`\n🔍 Starting ULTRA-DEEP analysis of ${url}...`)
+    console.log(`📋 Phase 1: URL Intelligence & Domain Analysis`)
+
+    // PHASE 1: URL INTELLIGENCE
+    const urlObj = new URL(url)
+    const domain = urlObj.hostname.replace('www.', '')
+    const domainParts = domain.split('.')
+    const tld = domainParts[domainParts.length - 1]
+
+    // Detect utility companies by domain pattern (common for utilities: cityutil.org, citypower.org)
+    const isLikelyUtility = (
+      (domain.includes('util') || domain.includes('power') || domain.includes('electric') || domain.includes('energy') || domain.includes('water') || domain.includes('gas')) &&
+      (tld === 'org' || tld === 'gov')
+    )
+
+    console.log(`   Domain: ${domain}`)
+    console.log(`   TLD: ${tld}`)
+    console.log(`   Likely Utility: ${isLikelyUtility}`)
 
     // Scrape homepage first
     const homeData = await scrapePage(url)
     const $ = homeData.$
 
-    // Extract company name and clean it
+    // PHASE 2: EXTRACT COMPANY NAME WITH VERIFICATION
+    console.log(`\n📋 Phase 2: Company Name Extraction & Verification`)
+
     let companyName =
       $('meta[property="og:site_name"]').attr('content') ||
       $('meta[name="application-name"]').attr('content') ||
@@ -56,9 +75,16 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     console.log(`✅ Found company: ${companyName}`)
     console.log(`📝 Description: ${description.substring(0, 100)}...`)
 
+    // PHASE 2.5: LOCATION DETECTION
+    console.log(`\n📋 Phase 2.5: Location & Geographic Context`)
+    const locationData = extractLocation($, homeData.text, companyName)
+    console.log(`   City: ${locationData.city || 'Not detected'}`)
+    console.log(`   State: ${locationData.state || 'Not detected'}`)
+    console.log(`   Region: ${locationData.region || 'Not detected'}`)
+
     // Find and scrape additional pages for DEEP context
     const additionalPages = await findKeyPages($, url)
-    console.log(`🔗 Found ${additionalPages.length} additional pages to scrape`)
+    console.log(`\n📋 Phase 2.6: Multi-Page Deep Scraping`)
 
     // Scrape up to 6 additional pages for comprehensive analysis
     const allPageData = [homeData]
@@ -94,8 +120,9 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     // ENHANCED: Deep analysis with full paragraph context
     const businessContext = analyzeBusinessContext(combinedText, combinedHeadings, description, companyName, allParagraphs)
 
-    // Detect industry with deep analysis
-    const industry = detectIndustryDeep(url, description, combinedHeadings, combinedText, businessContext)
+    // PHASE 3: INDUSTRY DETECTION WITH DOMAIN INTELLIGENCE
+    console.log(`\n📋 Phase 3: Multi-Pass Industry Detection`)
+    const industry = detectIndustryDeep(url, description, combinedHeadings, combinedText, businessContext, isLikelyUtility, domain)
 
     // Estimate company size
     const size = estimateCompanySize(combinedText, description)
@@ -150,16 +177,96 @@ async function scrapePage(url: string) {
   return { $, text, headings }
 }
 
-// Find key pages that might have valuable information
+// Extract location information from page
+function extractLocation($: cheerio.CheerioAPI, pageText: string, companyName: string): { city: string | null, state: string | null, region: string | null } {
+  const text = pageText.toLowerCase()
+
+  // Common US states (abbreviations and full names)
+  const states = {
+    'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
+    'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
+    'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
+    'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+    'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
+    'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ',
+    'new mexico': 'NM', 'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH',
+    'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+    'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
+    'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
+  }
+
+  let detectedState: string | null = null
+  let detectedCity: string | null = null
+
+  // Try to find state in address or contact info
+  for (const [fullName, abbrev] of Object.entries(states)) {
+    if (text.includes(fullName) || text.includes(abbrev.toLowerCase())) {
+      detectedState = abbrev
+      break
+    }
+  }
+
+  // Try to extract city from common patterns
+  const addressMatch = text.match(/(?:located in|based in|serving|headquarters in|office in)\s+([a-z\s]+),?\s+([a-z]{2})/i)
+  if (addressMatch) {
+    detectedCity = addressMatch[1].trim()
+    if (!detectedState && addressMatch[2]) {
+      detectedState = addressMatch[2].toUpperCase()
+    }
+  }
+
+  // Check meta tags for location
+  const addressTag = $('meta[property="og:street-address"]').attr('content') ||
+                     $('meta[name="geo.placename"]').attr('content') ||
+                     $('[itemtype*="PostalAddress"]').text()
+
+  if (addressTag) {
+    const addrText = addressTag.toLowerCase()
+    for (const [fullName, abbrev] of Object.entries(states)) {
+      if (addrText.includes(fullName) || addrText.includes(abbrev.toLowerCase())) {
+        detectedState = abbrev
+        break
+      }
+    }
+  }
+
+  // Determine region based on state
+  let region: string | null = null
+  if (detectedState) {
+    const northeast = ['ME', 'NH', 'VT', 'MA', 'RI', 'CT', 'NY', 'NJ', 'PA']
+    const southeast = ['DE', 'MD', 'VA', 'WV', 'KY', 'TN', 'NC', 'SC', 'GA', 'FL', 'AL', 'MS', 'LA', 'AR']
+    const midwest = ['OH', 'IN', 'IL', 'MI', 'WI', 'MN', 'IA', 'MO', 'ND', 'SD', 'NE', 'KS']
+    const southwest = ['TX', 'OK', 'NM', 'AZ']
+    const west = ['CA', 'NV', 'OR', 'WA', 'ID', 'MT', 'WY', 'CO', 'UT']
+
+    if (northeast.includes(detectedState)) region = 'Northeast'
+    else if (southeast.includes(detectedState)) region = 'Southeast'
+    else if (midwest.includes(detectedState)) region = 'Midwest'
+    else if (southwest.includes(detectedState)) region = 'Southwest'
+    else if (west.includes(detectedState)) region = 'West'
+  }
+
+  return { city: detectedCity, state: detectedState, region }
+}
+
+// Find key pages that might have valuable information (AVOID NOISE)
 function findKeyPages($: cheerio.CheerioAPI, baseUrl: string): string[] {
   const keyPages: string[] = []
   const baseUrlObj = new URL(baseUrl)
 
-  // Look for common informational pages
+  // Look for common informational pages that describe the CORE business
   const keyPhrases = [
     'about', 'what-we-do', 'services', 'solutions', 'products',
     'industries', 'capabilities', 'how-it-works', 'platform',
-    'features', 'overview', 'company'
+    'features', 'overview', 'company', 'who-we-are', 'our-business'
+  ]
+
+  // EXCLUDE pages that add noise (community programs, news, blogs, careers)
+  const excludePhrases = [
+    'blog', 'news', 'article', 'press', 'media', 'career', 'jobs', 'hiring',
+    'community', 'events', 'scholarship', 'education-program', 'outreach',
+    'volunteer', 'donation', 'foundation', 'charity', 'newsletter', 'login',
+    'sign-in', 'register', 'cart', 'checkout', 'privacy', 'terms', 'legal'
   ]
 
   $('a[href]').each((_, el) => {
@@ -177,6 +284,14 @@ function findKeyPages($: cheerio.CheerioAPI, baseUrl: string): string[] {
       const linkText = $(el).text().toLowerCase()
       const linkPath = linkUrl.toLowerCase()
 
+      // EXCLUDE noisy pages first
+      const isExcluded = excludePhrases.some(phrase =>
+        linkPath.includes(phrase) || linkText.includes(phrase)
+      )
+
+      if (isExcluded) return
+
+      // Check for key pages
       const isKeyPage = keyPhrases.some(phrase =>
         linkPath.includes(phrase) || linkText.includes(phrase)
       )
@@ -189,6 +304,7 @@ function findKeyPages($: cheerio.CheerioAPI, baseUrl: string): string[] {
     }
   })
 
+  console.log(`   🔗 Found ${keyPages.length} relevant pages (filtered out noise)`)
   return keyPages
 }
 
@@ -437,9 +553,24 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
   }
 }
 
-// Detect industry with deep analysis
-function detectIndustryDeep(url: string, description: string, headings: string, pageText: string, context: CompanyData['businessContext']): string {
+// Detect industry with deep analysis and domain intelligence
+function detectIndustryDeep(url: string, description: string, headings: string, pageText: string, context: CompanyData['businessContext'], isLikelyUtility: boolean = false, domain: string = ''): string {
   const combined = `${url} ${description} ${headings} ${pageText}`.toLowerCase()
+
+  // PRIORITY CHECK: If domain strongly indicates utility, verify and prioritize
+  if (isLikelyUtility) {
+    console.log(`   🔍 Domain pattern suggests utility company - verifying...`)
+    // Check if content confirms utility operations
+    const utilityIndicators = ['electric', 'electricity', 'power', 'utility', 'energy', 'water', 'gas', 'grid', 'transmission', 'distribution', 'kwh', 'kilowatt']
+    const utilityMatches = utilityIndicators.filter(indicator => combined.includes(indicator)).length
+
+    if (utilityMatches >= 3) {
+      console.log(`   ✅ CONFIRMED: Utility company (${utilityMatches} utility indicators found)`)
+      return 'Energy'
+    } else {
+      console.log(`   ⚠️ Domain suggests utility but only ${utilityMatches} indicators found - continuing standard detection`)
+    }
+  }
 
   // Weighted keyword scoring - primary keywords worth more than secondary
   const industryPatterns = {
@@ -468,8 +599,8 @@ function detectIndustryDeep(url: string, description: string, headings: string, 
       secondary: ['learning', 'student', 'academic', 'curriculum', 'courses']
     },
     'Energy': {
-      primary: ['energy', 'power', 'electricity', 'utility', 'grid', 'renewable energy'],
-      secondary: ['transmission', 'distribution', 'generation']
+      primary: ['electric utility', 'power utility', 'electricity provider', 'energy utility', 'public utility', 'utility company', 'electric cooperative', 'municipal utility', 'power grid', 'electric service', 'power company'],
+      secondary: ['transmission', 'distribution', 'generation', 'substation', 'kilowatt', 'kwh', 'megawatt', 'voltage', 'outage', 'service territory', 'rate schedule', 'electric bill', 'meter reading']
     },
     'Real Estate': {
       primary: ['real estate', 'property management', 'realtor', 'realty'],
@@ -495,11 +626,18 @@ function detectIndustryDeep(url: string, description: string, headings: string, 
     return 'Technology'
   }
 
+  // Score all industries and track details
+  const industryScores: Array<{ industry: string, score: number, primaryMatches: number, secondaryMatches: number }> = []
+
   for (const [industry, keywords] of Object.entries(industryPatterns)) {
     // Primary keywords worth 3 points, secondary worth 1 point
-    const primaryScore = keywords.primary.filter(kw => combined.includes(kw)).length * 3
-    const secondaryScore = keywords.secondary.filter(kw => combined.includes(kw)).length * 1
+    const primaryMatches = keywords.primary.filter(kw => combined.includes(kw)).length
+    const secondaryMatches = keywords.secondary.filter(kw => combined.includes(kw)).length
+    const primaryScore = primaryMatches * 3
+    const secondaryScore = secondaryMatches * 1
     const score = primaryScore + secondaryScore
+
+    industryScores.push({ industry, score, primaryMatches, secondaryMatches })
 
     if (score > maxScore) {
       maxScore = score
@@ -507,13 +645,33 @@ function detectIndustryDeep(url: string, description: string, headings: string, 
     }
   }
 
+  // Sort scores for logging
+  industryScores.sort((a, b) => b.score - a.score)
+
+  // Log top 3 candidates for transparency
+  console.log(`   📊 Top industry candidates:`)
+  industryScores.slice(0, 3).forEach((item, idx) => {
+    const confidence = maxScore > 0 ? Math.round((item.score / maxScore) * 100) : 0
+    console.log(`      ${idx + 1}. ${item.industry}: ${item.score} pts (${item.primaryMatches} primary, ${item.secondaryMatches} secondary) - ${confidence}% confidence`)
+  })
+
   // Require minimum score threshold to avoid false positives
   if (maxScore < 3) {
-    console.log(`   ⚠ Industry score too low (${maxScore}), defaulting to Business Services`)
+    console.log(`   ⚠️ CONFIDENCE TOO LOW: Highest score ${maxScore} < 3 threshold`)
+    console.log(`   ⚠️ Defaulting to Business Services due to insufficient evidence`)
     return 'Business Services'
   }
 
-  console.log(`   ✓ Detected industry: ${detectedIndustry} (score: ${maxScore})`)
+  // Check if detection is ambiguous (multiple industries with similar scores)
+  const secondHighest = industryScores[1]?.score || 0
+  const scoreGap = maxScore - secondHighest
+
+  if (scoreGap < 3 && maxScore < 10) {
+    console.log(`   ⚠️ AMBIGUOUS DETECTION: Gap between top 2 industries is only ${scoreGap} points`)
+    console.log(`   💡 Recommendation: Manually verify industry for ${url}`)
+  }
+
+  console.log(`   ✅ FINAL DETECTION: ${detectedIndustry} (${maxScore} points, ${Math.round((maxScore / (maxScore + secondHighest)) * 100)}% confidence)`)
   return detectedIndustry
 }
 
