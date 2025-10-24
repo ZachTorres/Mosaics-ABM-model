@@ -212,56 +212,107 @@ function estimateCompanySize(pageText: string, description: string): 'small' | '
   return 'medium' // default
 }
 
-// Extract colors from website with improved algorithm
+// Known brand colors database for popular companies
+const BRAND_COLORS: Record<string, { primary: string, secondary: string, accent: string }> = {
+  'stripe': { primary: '#635bff', secondary: '#0a2540', accent: '#00d4ff' },
+  'spotify': { primary: '#1db954', secondary: '#191414', accent: '#1ed760' },
+  'netflix': { primary: '#e50914', secondary: '#221f1f', accent: '#b20710' },
+  'airbnb': { primary: '#ff5a5f', secondary: '#00a699', accent: '#fc642d' },
+  'uber': { primary: '#000000', secondary: '#5fb709', accent: '#1fbad6' },
+  'slack': { primary: '#4a154b', secondary: '#36c5f0', accent: '#2eb67d' },
+  'twitter': { primary: '#1da1f2', secondary: '#14171a', accent: '#657786' },
+  'facebook': { primary: '#1877f2', secondary: '#4267b2', accent: '#42b72a' },
+  'linkedin': { primary: '#0077b5', secondary: '#00a0dc', accent: '#313335' },
+  'microsoft': { primary: '#00a4ef', secondary: '#7fba00', accent: '#ffb900' },
+  'google': { primary: '#4285f4', secondary: '#ea4335', accent: '#fbbc04' },
+  'amazon': { primary: '#ff9900', secondary: '#146eb4', accent: '#232f3e' },
+  'salesforce': { primary: '#00a1e0', secondary: '#032d60', accent: '#1798c1' },
+  'shopify': { primary: '#96bf48', secondary: '#5e8e3e', accent: '#7ab55c' },
+  'hubspot': { primary: '#ff7a59', secondary: '#33475b', accent: '#00bda5' },
+  'zoom': { primary: '#2d8cff', secondary: '#0e5a8a', accent: '#1a73e8' },
+  'dropbox': { primary: '#0061ff', secondary: '#1e87f0', accent: '#007ee5' },
+  'nike': { primary: '#111111', secondary: '#757575', accent: '#ffffff' },
+  'adidas': { primary: '#000000', secondary: '#767677', accent: '#eceff1' },
+  'cocacola': { primary: '#f40009', secondary: '#000000', accent: '#ffffff' },
+  'pepsi': { primary: '#004b93', secondary: '#e32934', accent: '#ffffff' },
+  'starbucks': { primary: '#00704a', secondary: '#1e3932', accent: '#d4af37' },
+  'mcdonalds': { primary: '#ffc72c', secondary: '#da291c', accent: '#27251f' },
+  'target': { primary: '#cc0000', secondary: '#ffffff', accent: '#000000' },
+  'walmart': { primary: '#0071ce', secondary: '#ffc220', accent: '#004f9a' },
+  'tesla': { primary: '#cc0000', secondary: '#000000', accent: '#393c41' }
+}
+
+// Extract colors from website with multiple fallback methods
 async function extractColors($: cheerio.CheerioAPI, url: string): Promise<{ primary: string, secondary: string, accent: string }> {
+  // First, check if this is a known brand
+  const domain = url.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('.')[0]
+  if (BRAND_COLORS[domain]) {
+    console.log(`🎨 Using known brand colors for: ${domain}`)
+    return BRAND_COLORS[domain]
+  }
+
   const colorFrequency: Record<string, number> = {}
 
-  // Extract from inline styles (prioritize header, nav, buttons, CTAs)
-  $('header, nav, .header, .navbar, button, .btn, .cta, a[class*="button"]').each((_, elem) => {
-    const style = $(elem).attr('style') || ''
-    const bgColor = $(elem).css('background-color') || ''
-    const color = $(elem).css('color') || ''
+  // Method 1: Check meta theme-color (highest priority)
+  const themeColor = $('meta[name="theme-color"]').attr('content')
+  if (themeColor) {
+    extractColorFromText(themeColor, colorFrequency, 20)
+    console.log(`🎨 Found theme-color meta tag: ${themeColor}`)
+  }
 
-    extractColorFromText(style, colorFrequency, 3) // Higher weight for important elements
-    extractColorFromText(bgColor, colorFrequency, 3)
-    extractColorFromText(color, colorFrequency, 2)
+  // Method 2: Extract from SVG elements (logos often contain brand colors)
+  $('svg').each((_, elem) => {
+    const svgHtml = $(elem).html() || ''
+    const fill = $(elem).attr('fill') || ''
+    const stroke = $(elem).attr('stroke') || ''
+
+    extractColorFromText(svgHtml, colorFrequency, 8)
+    extractColorFromText(fill, colorFrequency, 8)
+    extractColorFromText(stroke, colorFrequency, 8)
   })
 
-  // Extract from all elements with styles
-  $('[style]').each((_, elem) => {
+  // Method 3: Extract from inline styles (prioritize header, nav, buttons, CTAs)
+  $('header, nav, .header, .navbar, button, .btn, .cta, a[class*="button"], a[class*="btn"]').each((_, elem) => {
     const style = $(elem).attr('style') || ''
-    extractColorFromText(style, colorFrequency, 1)
+    extractColorFromText(style, colorFrequency, 5)
   })
 
-  // Extract from style tags (look for common CSS patterns)
+  // Method 4: Extract from all elements with background/color attributes
+  $('[style*="background"], [style*="color"], [bgcolor], [color]').each((_, elem) => {
+    const style = $(elem).attr('style') || ''
+    const bgcolor = $(elem).attr('bgcolor') || ''
+    const color = $(elem).attr('color') || ''
+
+    extractColorFromText(style, colorFrequency, 3)
+    extractColorFromText(bgcolor, colorFrequency, 3)
+    extractColorFromText(color, colorFrequency, 3)
+  })
+
+  // Method 5: Extract from style tags
   $('style').each((_, elem) => {
     const css = $(elem).html() || ''
 
-    // Look for primary/brand color variables and classes
-    const brandColorPatterns = [
-      /--(?:primary|brand|main|accent|theme)(?:-color)?:\s*([^;]+)/gi,
-      /\.(?:primary|brand|btn-primary|cta)[^{]*\{[^}]*background(?:-color)?:\s*([^;]+)/gi,
-      /\.(?:primary|brand|btn-primary|cta)[^{]*\{[^}]*color:\s*([^;]+)/gi
-    ]
-
-    brandColorPatterns.forEach(pattern => {
-      const matches = css.matchAll(pattern)
-      for (const match of matches) {
-        if (match[1]) {
-          extractColorFromText(match[1], colorFrequency, 5) // Very high weight for brand variables
-        }
+    // Look for CSS custom properties (variables)
+    const varPattern = /--[a-z-]+(?:color|bg|brand|primary|accent|theme)[^:]*:\s*([^;]+)/gi
+    const varMatches = css.matchAll(varPattern)
+    for (const match of varMatches) {
+      if (match[1]) {
+        extractColorFromText(match[1], colorFrequency, 10)
       }
-    })
+    }
 
-    // Extract all colors from CSS
+    // Look for button/primary classes
+    const classPattern = /\.(btn|button|primary|cta|brand)[^{]*\{([^}]+)\}/gi
+    const classMatches = css.matchAll(classPattern)
+    for (const match of classMatches) {
+      if (match[2]) {
+        extractColorFromText(match[2], colorFrequency, 6)
+      }
+    }
+
+    // Extract all colors
     extractColorFromText(css, colorFrequency, 1)
   })
-
-  // Extract from link tags (sometimes meta theme color is defined)
-  const themeColor = $('meta[name="theme-color"]').attr('content')
-  if (themeColor) {
-    extractColorFromText(themeColor, colorFrequency, 10) // Highest weight for explicit theme color
-  }
 
   // Convert frequency map to sorted array
   const sortedColors = Object.entries(colorFrequency)
@@ -269,10 +320,11 @@ async function extractColors($: cheerio.CheerioAPI, url: string): Promise<{ prim
     .sort((a, b) => b.freq - a.freq)
     .map(item => item.color)
     .filter(color => !isGrayscale(color))
-    .filter(color => !isCommonUIColor(color)) // Filter out very common UI colors like pure white/black
+    .filter(color => !isCommonUIColor(color))
 
-  console.log(`🎨 Found ${sortedColors.length} brand colors:`, sortedColors.slice(0, 5))
+  console.log(`🎨 Extracted ${sortedColors.length} brand colors from ${domain}:`, sortedColors.slice(0, 5).map((c, i) => `${c} (${Object.entries(colorFrequency).find(([col]) => col === c)?.[1] || 0})`))
 
+  // Need at least one strong color to be confident
   if (sortedColors.length >= 3) {
     return {
       primary: sortedColors[0],
@@ -288,12 +340,79 @@ async function extractColors($: cheerio.CheerioAPI, url: string): Promise<{ prim
   } else if (sortedColors.length === 1) {
     return {
       primary: sortedColors[0],
-      secondary: sortedColors[0],
-      accent: sortedColors[0]
+      secondary: darkenColor(sortedColors[0], 20),
+      accent: lightenColor(sortedColors[0], 20)
     }
   }
 
-  return { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' }
+  // Last resort: generate colors based on domain/company name
+  console.log(`⚠️ No brand colors found for ${domain}, generating from domain hash`)
+  return generateColorsFromString(domain)
+}
+
+// Generate consistent colors from a string (domain name)
+function generateColorsFromString(str: string): { primary: string, secondary: string, accent: string } {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  }
+
+  const h = Math.abs(hash % 360)
+  const primary = hslToHex(h, 65, 50)
+  const secondary = hslToHex((h + 30) % 360, 65, 40)
+  const accent = hslToHex((h + 60) % 360, 65, 60)
+
+  return { primary, secondary, accent }
+}
+
+// Convert HSL to Hex
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100
+  l /= 100
+
+  const c = (1 - Math.abs(2 * l - 1)) * s
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1))
+  const m = l - c / 2
+  let r = 0, g = 0, b = 0
+
+  if (h >= 0 && h < 60) {
+    r = c; g = x; b = 0
+  } else if (h >= 60 && h < 120) {
+    r = x; g = c; b = 0
+  } else if (h >= 120 && h < 180) {
+    r = 0; g = c; b = x
+  } else if (h >= 180 && h < 240) {
+    r = 0; g = x; b = c
+  } else if (h >= 240 && h < 300) {
+    r = x; g = 0; b = c
+  } else {
+    r = c; g = 0; b = x
+  }
+
+  const toHex = (n: number) => {
+    const hex = Math.round((n + m) * 255).toString(16)
+    return hex.length === 1 ? '0' + hex : hex
+  }
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+}
+
+// Darken a color
+function darkenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.slice(1), 16)
+  const r = Math.max(0, Math.floor((num >> 16) * (1 - percent / 100)))
+  const g = Math.max(0, Math.floor(((num >> 8) & 0x00FF) * (1 - percent / 100)))
+  const b = Math.max(0, Math.floor((num & 0x0000FF) * (1 - percent / 100)))
+  return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`
+}
+
+// Lighten a color
+function lightenColor(hex: string, percent: number): string {
+  const num = parseInt(hex.slice(1), 16)
+  const r = Math.min(255, Math.floor((num >> 16) + (255 - (num >> 16)) * (percent / 100)))
+  const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) + (255 - ((num >> 8) & 0x00FF)) * (percent / 100)))
+  const b = Math.min(255, Math.floor((num & 0x0000FF) + (255 - (num & 0x0000FF)) * (percent / 100)))
+  return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`
 }
 
 // Helper to extract colors from text and add to frequency map
