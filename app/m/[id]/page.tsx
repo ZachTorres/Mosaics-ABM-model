@@ -6,8 +6,6 @@ import MicrositeView from '@/components/MicrositeView'
 
 interface SavedMicrositeData {
   id: string
-  slug: string
-  urlPath: string
   microsite: any
   createdAt: string
   viewCount: number
@@ -15,7 +13,7 @@ interface SavedMicrositeData {
 
 export default function MicrositePage() {
   const params = useParams()
-  const urlPath = params.id as string
+  const id = params.id as string
 
   const [data, setData] = useState<SavedMicrositeData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -24,10 +22,7 @@ export default function MicrositePage() {
   useEffect(() => {
     async function loadMicrosite() {
       try {
-        // Extract the ID from the URL path (format: slug-id)
-        const parts = urlPath.split('-')
-        const id = parts[parts.length - 1]
-
+        // ID is now just the short ID (no slug parsing needed)
         const response = await fetch(`/api/save-microsite?id=${id}`)
 
         if (!response.ok) {
@@ -46,7 +41,7 @@ export default function MicrositePage() {
     }
 
     loadMicrosite()
-  }, [urlPath])
+  }, [id])
 
   if (loading) {
     return (

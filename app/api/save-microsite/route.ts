@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateShortId, createSlug } from '@/lib/utils'
+import { generateShortId } from '@/lib/utils'
 import fs from 'fs'
 import path from 'path'
 
@@ -55,16 +55,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate unique ID and slug
+    // Generate unique ID only (no slug for cleaner URLs)
     const id = generateShortId()
-    const slug = createSlug(microsite.companyName)
-    const urlPath = `${slug}-${id}`
 
     // Save microsite data with metadata
     const savedData = {
       id,
-      slug,
-      urlPath,
       microsite,
       createdAt: new Date().toISOString(),
       viewCount: 0
@@ -81,8 +77,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       id,
-      urlPath,
-      shareUrl: `/m/${urlPath}`
+      shareUrl: `/m/${id}`
     })
 
   } catch (error: any) {
