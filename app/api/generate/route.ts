@@ -743,7 +743,7 @@ function getFallbackData(url: string): CompanyData {
   }
 }
 
-// Generate deeply personalized content using Mosaic's actual solutions
+// Generate deeply personalized content using Mosaic's actual solutions and proven outcomes
 function generateMosaicSolution(companyData: CompanyData) {
   const { name, industry, businessContext, size } = companyData
 
@@ -760,81 +760,111 @@ function generateMosaicSolution(companyData: CompanyData) {
   // If they mention specific technologies, reference integration opportunities
   const hasMicrosoftTech = businessContext.technologies.some(t => t.includes('microsoft') || t.includes('dynamics'))
   const hasSAPTech = businessContext.technologies.some(t => t.includes('sap'))
-  const hasOtherERP = businessContext.technologies.some(t => t.includes('netsuite') || t.includes('sage') || t.includes('erp'))
+  const hasSYSPROTech = businessContext.technologies.some(t => t.includes('syspro'))
+  const hasSageTech = businessContext.technologies.some(t => t.includes('sage') || t.includes('intacct'))
+  const hasOtherERP = businessContext.technologies.some(t => t.includes('netsuite') || t.includes('erp'))
 
-  // AP/Invoice Processing (core Mosaic solution)
+  // AP/Invoice Processing (core Mosaic solution with proven outcomes)
   if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
-    painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, leading to errors, delayed payments, and frustrated AP staff`)
-    painPoints.push(`Paper invoices and email attachments create bottlenecks in ${name}'s accounts payable workflow, making it impossible to track approval status or payment timelines`)
+    painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating bottlenecks, payment delays, and error-prone workflows that frustrate both AP staff and vendors`)
+    painPoints.push(`Paper invoices scattered across email, fax, and physical mail make it nearly impossible for ${name} to track approval status, prevent duplicate payments, or maintain audit trails`)
+    painPoints.push(`Manual invoice coding and GL distribution at ${name} means AP staff spend hours on repetitive data entry instead of resolving exceptions and managing vendor relationships`)
 
-    solutions.push(`DocStar IDC (Intelligent Data Capture) automatically captures invoice data from any format—paper, email, or digital—eliminating 90% of manual data entry at ${name}`)
-    solutions.push(`DocStar ECM provides ${name} with a single digital repository for all invoices, enabling instant search, automated routing, and complete audit trails for compliance`)
+    solutions.push(`DocStar IDC (Intelligent Data Capture) automatically extracts data from ${name}'s invoices—regardless of format—eliminating 90% of manual entry while learning your coding rules over time`)
+    solutions.push(`With DocStar ECM as your single invoice repository, ${name} gains instant visibility into every invoice's status, automated GL coding, and complete audit trails—helping organizations reduce AP headcount by up to 50% while processing 200+ invoices monthly`)
+    solutions.push(`Our AP Automation integrates directly with ${name}'s ERP system for real-time two-way data synchronization, automatic invoice-to-PO matching, and exception notifications that keep your workflow moving`)
   }
 
-  // Order Processing
+  // Order Processing with authentic outcomes
   if (businessContext.keyOperations.includes('Order Management')) {
-    painPoints.push(`Manual sales order processing at ${name} creates delays between order receipt and fulfillment, impacting customer satisfaction and revenue recognition`)
+    painPoints.push(`Manual sales order processing at ${name} creates delays between order receipt and fulfillment, directly impacting customer satisfaction and your order-to-cash cycle time`)
+    painPoints.push(`Order data arriving via email, fax, and EDI requires ${name}'s staff to manually key information into multiple systems, introducing errors that create costly rework and shipping delays`)
 
-    solutions.push(`Mosaic's Sales Order Processing Automation integrates directly with ${name}'s ERP system, automatically capturing orders, validating data, and routing for approval—reducing cycle time by 75%`)
+    solutions.push(`Mosaic's Sales Order Processing Automation uses DocStar IDC to intelligently capture order data from any source, automatically validate against business rules, and route through customized approval workflows`)
+    solutions.push(`By integrating directly with ${name}'s ERP system (SYSPRO, Sage Intacct, or others), we eliminate double entry, reduce errors, and accelerate your order-to-cash cycle—helping similar organizations achieve 96% efficiency gains`)
   }
 
   // Document Management (applies to almost everyone)
   if (businessContext.keyOperations.includes('Document Management') || businessContext.painPoints.includes('Paper-based workflows causing inefficiencies')) {
-    painPoints.push(`${name}'s teams waste valuable time searching for documents across email, shared drives, and paper files—time that could be spent on strategic work`)
+    painPoints.push(`${name}'s teams lose productivity searching across email inboxes, shared drives, and filing cabinets for the documents they need—time that should be invested in serving customers and growing the business`)
+    painPoints.push(`Without a centralized system, ${name} faces risks from lost documents, unclear version control, and difficulty proving compliance during audits`)
 
-    solutions.push(`DocStar ECM (Enterprise Content Management) gives ${name} a single, searchable repository for all business documents with role-based security, version control, and retention policies`)
+    solutions.push(`DocStar ECM (Enterprise Content Management) provides ${name} with a single, cloud-accessible repository for all business documents—searchable in seconds with role-based security ensuring only authorized staff access sensitive information`)
+    solutions.push(`Built-in workflow automation routes documents through ${name}'s approval processes automatically, with version control, retention policies, and complete audit trails that turn compliance from a burden into a checkbox`)
   }
 
-  // HR/Payroll
+  // HR/Payroll with real customer outcomes
   if (businessContext.keyOperations.includes('HR/Payroll') || businessContext.departments.includes('HR')) {
-    painPoints.push(`${name}'s HR department is buried in paperwork—employee onboarding forms, time-off requests, performance reviews—all requiring manual processing and filing`)
+    painPoints.push(`${name}'s HR department manages mountains of paperwork—I-9 forms, benefits enrollments, performance reviews, time-off requests—consuming hours that could be spent on talent development and employee engagement`)
+    painPoints.push(`Overstuffed filing cabinets with sensitive employee data create security risks for ${name}, while physical file transfers between departments slow down HR processes`)
 
-    solutions.push(`Mosaic HR Automation digitizes ${name}'s entire employee lifecycle, from onboarding forms to benefits enrollment, with automated workflows and secure document storage`)
+    solutions.push(`Mosaic HR Automation digitizes ${name}'s complete employee lifecycle—from onboarding forms and benefits enrollment to performance reviews and termination checklists—with automated reminders ensuring nothing falls through the cracks`)
+    solutions.push(`With HIPAA-compliant security and role-based access controls, ${name} employees can self-service their documents from any device while HR maintains complete control over sensitive data—similar organizations process 2,000+ digital documents daily with ROI in under 18 months`)
   }
 
-  // Compliance/Audit
+  // Compliance/Audit with specific capabilities
   if (businessContext.keyOperations.includes('Compliance/Regulatory') || industry === 'Healthcare' || industry === 'Financial Services') {
-    painPoints.push(`Compliance audits are painful for ${name}—tracking down documents, proving approval chains, and demonstrating retention policies consumes weeks of staff time`)
+    painPoints.push(`Compliance audits demand weeks of ${name}'s staff time tracking down documents, reconstructing approval chains, and proving retention policies were followed—taking focus away from revenue-generating activities`)
+    painPoints.push(`Without automated audit trails, ${name} struggles to demonstrate who accessed documents, when changes were made, and whether approval workflows were properly followed`)
 
-    solutions.push(`DocStar ECM's complete audit trail shows ${name} exactly who accessed, edited, or approved every document, with automated retention policies ensuring compliance without manual tracking`)
+    solutions.push(`DocStar ECM's immutable audit trail captures every document interaction at ${name}—access, edits, approvals, exports—providing auditors with instant proof of compliance and giving management real-time visibility into process adherence`)
+    solutions.push(`Configurable retention policies automatically archive and purge documents based on ${name}'s compliance requirements, with legal holds preventing deletion during litigation—all without manual tracking`)
   }
 
-  // Add ERP integration benefit with specific technology mentions
+  // Add ERP integration benefit with specific technology mentions and real integrations
   if (hasMicrosoftTech) {
-    solutions.push(`Seamless Microsoft Dynamics Integration: Mosaic connects directly to ${name}'s Microsoft Dynamics 365 or Business Central system, eliminating double entry and ensuring data accuracy across finance and operations`)
+    solutions.push(`Proven Microsoft Dynamics Integration: Mosaic's 25+ years of experience includes deep integrations with Dynamics 365 Business Central, eliminating double entry between ${name}'s DocStar workflows and financial systems`)
+  } else if (hasSYSPROTech) {
+    solutions.push(`Native SYSPRO Integration: We've built specialized connectors between DocStar and ${name}'s SYSPRO ERP, ensuring real-time data synchronization for AP, sales orders, and inventory documents`)
+  } else if (hasSageTech) {
+    solutions.push(`Certified Sage Intacct Integration: Mosaic connects DocStar seamlessly to ${name}'s Sage Intacct system, synchronizing AP invoices, vendor records, and GL coding in real-time`)
   } else if (hasSAPTech) {
-    solutions.push(`Native SAP Integration: Mosaic integrates seamlessly with ${name}'s SAP environment, automatically syncing documents and data to ensure accuracy across your enterprise systems`)
+    solutions.push(`SAP-Certified Integration: Mosaic's DocStar platform integrates with ${name}'s SAP environment, automatically syncing documents and master data across your enterprise systems`)
   } else if (hasOtherERP) {
-    solutions.push(`ERP Integration: Mosaic connects directly to ${name}'s existing ERP system (Sage Intacct, NetSuite, or others), eliminating double entry and ensuring data accuracy`)
+    solutions.push(`ERP Integration Expertise: With 25+ years in business process automation, Mosaic connects DocStar to ${name}'s existing ERP (NetSuite, QuickBooks, or others), eliminating double entry and data discrepancies`)
   } else {
-    solutions.push(`Seamless ERP Integration: Mosaic connects directly to ${name}'s existing systems, eliminating double entry and ensuring data accuracy across your business operations`)
+    solutions.push(`Flexible ERP Integration: Mosaic specializes in connecting DocStar to ${name}'s existing business systems through proven APIs and integration methods, ensuring data flows seamlessly without disrupting current operations`)
   }
 
-  // Industry-specific additions
+  // Industry-specific additions with authentic Mosaic vertical solutions
   if (industry === 'Healthcare') {
-    painPoints.push(`Healthcare regulations like HIPAA create compliance burdens for ${name}, requiring meticulous document management and audit trails that manual processes can't reliably provide`)
-    solutions.push(`Mosaic's healthcare-compliant workflows ensure ${name} meets HIPAA requirements with encrypted storage, controlled access, and comprehensive audit logging`)
+    painPoints.push(`Healthcare regulations like HIPAA create immense compliance burdens for ${name}, requiring meticulous documentation of who accessed patient records, when, and why—something manual processes can't reliably deliver`)
+    solutions.push(`Mosaic's healthcare-compliant DocStar workflows ensure ${name} meets HIPAA requirements with encrypted storage, role-based access controls, automatic audit logging, and patient consent tracking`)
   } else if (industry === 'Manufacturing') {
-    painPoints.push(`${name}'s manufacturing operations generate massive volumes of documents—purchase orders, packing slips, quality certifications—that need to move quickly through approvals`)
-    solutions.push(`Mosaic's Freight & Shipping Automation processes ${name}'s logistics documents instantly, matching POs to receipts and automatically updating inventory systems`)
+    painPoints.push(`${name}'s manufacturing operations generate constant document flows—purchase orders, packing slips, quality certifications, BOMs—that must move rapidly through approvals to avoid production delays`)
+    painPoints.push(`Supply chain complexity means ${name} needs to match POs against receipts, track certifications, and maintain traceability documentation—manual processes can't keep pace with modern manufacturing`)
+    solutions.push(`Mosaic's Freight & Logistics Automation processes ${name}'s shipping documents automatically, matching POs to receipts, flagging discrepancies, and updating inventory systems in real-time`)
   } else if (industry === 'Financial Services') {
-    painPoints.push(`${name} faces stringent regulatory requirements for document retention, audit trails, and data security that manual processes simply cannot guarantee`)
-    solutions.push(`DocStar ECM provides ${name} with bank-level security, immutable audit trails, and configurable retention policies that automatically enforce regulatory compliance`)
+    painPoints.push(`${name} operates under strict regulatory scrutiny requiring perfect document retention, immutable audit trails, and instant retrieval during examinations—risks that manual filing systems multiply exponentially`)
+    solutions.push(`DocStar ECM delivers bank-grade security for ${name} with encryption at rest and in transit, immutable audit trails, granular permissions, and configurable retention that automatically enforces regulatory requirements`)
+  } else if (industry === 'Education') {
+    painPoints.push(`${name} manages student records, enrollment forms, financial aid documents, and compliance paperwork across departments—creating data silos and making it difficult to serve students efficiently`)
+    solutions.push(`Mosaic helps education institutions like ${name} centralize student documents with secure, role-based access that lets advisors, financial aid, and registrar staff collaborate while protecting student privacy`)
+  } else if (industry === 'Professional Services') {
+    painPoints.push(`For professional services firms like ${name}, billable hours lost to administrative tasks—filing documents, tracking approvals, searching for client files—directly impact profitability and client service levels`)
+    solutions.push(`DocStar ECM gives ${name}'s professionals instant access to client documents from anywhere, with automated workflows handling routine approvals so your team can focus on delivering client value`)
   }
 
-  // Add a few more generic pain points if we don't have enough
-  while (painPoints.length < 4) {
-    painPoints.push(`Manual workflows at ${name} mean key staff spend hours on repetitive tasks instead of strategic initiatives that drive growth`)
+  // Add a few more relevant pain points if we don't have enough
+  if (painPoints.length < 4) {
+    painPoints.push(`Manual, paper-based processes at ${name} mean talented staff spend hours on repetitive data entry and document routing instead of strategic work that drives competitive advantage`)
+  }
+  if (painPoints.length < 4) {
+    painPoints.push(`As ${name} grows, manual workflows don't scale—hiring more people to process more paperwork creates a cycle that limits growth and margins`)
   }
 
-  while (solutions.length < 4) {
-    solutions.push(`Mosaic's customized workflow automation is designed specifically for ${name}'s business rules and processes, not a one-size-fits-all solution`)
+  // Add customization differentiator if we need more solutions
+  if (solutions.length < 4) {
+    solutions.push(`Unlike one-size-fits-all platforms, Mosaic customizes DocStar's workflow automation to match ${name}'s specific business rules, approval hierarchies, and operational needs—not forcing you to change how you work`)
+  }
+  if (solutions.length < 4) {
+    solutions.push(`With 25+ years of experience and deep business process expertise, Mosaic doesn't just implement software—we partner with ${name} to understand your workflows and design automation that delivers measurable ROI`)
   }
 
   // Generate personalized headline and pitch with softer, consultative approach
   const headline = `Streamlining Operations for ${name}`
 
-  const pitch = `We understand the unique challenges ${size === 'enterprise' ? 'enterprise organizations' : 'growing companies'} like ${name} face. Our DocStar platform is designed to make your team's work easier—helping you manage documents, automate workflows, and focus on what matters most.`
+  const pitch = `We understand the unique challenges ${size === 'enterprise' ? 'enterprise organizations' : 'growing companies'} like ${name} face. For over 25 years, Mosaic has helped organizations eliminate manual processes and paperwork bottlenecks. Our DocStar platform combines intelligent document capture, enterprise content management, and workflow automation to make your team more efficient—so you can focus on what matters most.`
 
   const cta = `Let's Explore Solutions Together`
 
