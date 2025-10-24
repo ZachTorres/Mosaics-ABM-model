@@ -133,17 +133,22 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 mb-12">
             {/* Challenges */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <svg className="w-7 h-7 mr-3" style={{ color: microsite.colors.primary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span className="text-red-500">⚠️</span>
                 Your Challenges
               </h2>
               <div className="space-y-4">
                 {microsite.painPoints.slice(0, 4).map((point, idx) => (
-                  <div key={idx} className="flex items-start">
-                    <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3" style={{ backgroundColor: microsite.colors.primary }}></div>
-                    <p className="text-gray-700 leading-relaxed">{point}</p>
+                  <div key={idx} className="flex items-start bg-red-50 p-4 rounded-lg border border-red-100">
+                    <svg
+                      className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5 text-red-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-800 font-medium leading-relaxed">{point}</p>
                   </div>
                 ))}
               </div>
@@ -151,32 +156,68 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
 
             {/* Solutions */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                <svg className="w-7 h-7 mr-3" style={{ color: microsite.colors.accent }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <span className="text-green-500">✓</span>
                 Our Solutions
               </h2>
               <div className="space-y-4">
                 {microsite.solutions.slice(0, 4).map((solution, idx) => (
-                  <div key={idx} className="flex items-start">
-                    <div className="flex-shrink-0 w-2 h-2 rounded-full mt-2 mr-3" style={{ backgroundColor: microsite.colors.accent }}></div>
-                    <p className="text-gray-700 leading-relaxed">{solution}</p>
+                  <div key={idx} className="flex items-start bg-green-50 p-4 rounded-lg border border-green-100">
+                    <svg
+                      className="w-6 h-6 mr-3 flex-shrink-0 mt-0.5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-gray-800 font-medium leading-relaxed">{solution}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
+          {/* Prominent CTA Section */}
+          <div className="mt-12 pt-12 border-t border-gray-200">
+            <div className="text-center bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl border-2 border-blue-200">
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                {microsite.cta}
+              </h3>
+              <p className="text-gray-700 mb-8 text-lg">
+                Schedule a personalized demo to see how Mosaic can transform {microsite.companyName}'s operations
+              </p>
+              <a
+                href="#contact-form"
+                className="inline-flex items-center gap-3 px-10 py-5 text-white text-xl font-bold rounded-xl transition-all shadow-2xl hover:shadow-xl transform hover:scale-105 hover:-translate-y-1"
+                style={{
+                  background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
+                }}
+                onClick={(e) => {
+                  e.preventDefault()
+                  document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                <span>Get Your Free Demo</span>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+              <p className="text-sm text-gray-600 mt-4">
+                No credit card required • 30-minute consultation • See results in real-time
+              </p>
+            </div>
+          </div>
+
           {/* Contact Form */}
           {showContactForm && (
-            <div className="border-t border-gray-200 pt-12">
+            <div id="contact-form" className="border-t border-gray-200 pt-12 mt-12 scroll-mt-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                  {microsite.cta}
+                  Get Started Today
                 </h2>
                 <p className="text-lg text-gray-600">
-                  Let's discuss how we can help {microsite.companyName}
+                  Fill out the form below and we'll be in touch shortly
                 </p>
               </div>
 
