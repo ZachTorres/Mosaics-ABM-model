@@ -179,40 +179,32 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
           {/* Book a Demo CTA */}
           {showContactForm && (
             <div id="contact-form" className="border-t border-gray-200 pt-16 mt-4">
-              <div className="text-center mb-10 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-12 rounded-2xl border-2 border-blue-100 shadow-xl">
-                <div className="mb-6">
-                  <span className="inline-block px-6 py-2 bg-green-500 text-white text-sm font-bold rounded-full mb-4 animate-pulse">
-                    ✓ FREE • NO OBLIGATION • 15 MINUTES
-                  </span>
-                </div>
-
-                <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-4 leading-tight">
+              <div className="text-center mb-10 bg-gradient-to-br from-slate-50 to-blue-50 p-12 rounded-xl border border-slate-200 shadow-lg">
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
                   {microsite.cta}
                 </h2>
 
-                <p className="text-xl text-gray-700 mb-8 font-medium max-w-2xl mx-auto">
-                  See exactly how much time and money {microsite.companyName} can save with automated workflows
+                <p className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto leading-relaxed">
+                  Discover how Mosaic's workflow automation can streamline operations and drive measurable results for {microsite.companyName}
                 </p>
 
                 <a
                   href="https://outlook.office.com/bookwithme/user/28482ab4ec684e649a3667356522a06e%40mosaiccorp.com?anonymous&ismsaljsauthenabled=true"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 px-14 py-6 text-white text-2xl font-black rounded-2xl transition-all shadow-2xl hover:shadow-3xl transform hover:scale-110 hover:-translate-y-2 animate-bounce"
+                  className="inline-flex items-center gap-3 px-10 py-5 text-white text-lg font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                   style={{
-                    background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`,
-                    animationDuration: '2s',
-                    animationIterationCount: 'infinite'
+                    background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
                   }}
                 >
-                  <span>SCHEDULE MY FREE ANALYSIS</span>
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <span>Schedule a Consultation</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                 </a>
 
-                <p className="text-sm text-gray-600 mt-6 font-semibold">
-                  ⚡ Most companies see ROI in under 90 days
+                <p className="text-sm text-gray-600 mt-6">
+                  Join industry leaders who trust Mosaic for workflow transformation
                 </p>
               </div>
             </div>

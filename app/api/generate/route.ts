@@ -933,45 +933,47 @@ function generateMosaicSolution(companyData: CompanyData) {
 
   // ONLY add generic pain points if we don't have enough specific ones from deep analysis
   const hasSpecificPainPoints = painPoints.length >= 3
-  console.log(`   ${hasSpecificPainPoints ? '✓ Have specific pain points, skipping generics' : '⚠ Need more pain points, adding targeted generics'}`)
+  console.log(`   Current pain points count: ${painPoints.length}`)
+  console.log(`   ${hasSpecificPainPoints ? '✓ Have specific pain points, skipping generics' : '⚠ Need more pain points, using industry-targeted fallbacks'}`)
 
-  // AP/Invoice Processing - detailed and specific (ONLY if needed)
-  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING'))) {
-    painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
-    painPoints.push(`Paper invoices arriving via email, fax, and mail make it nearly impossible to track approval status or prevent duplicate payments—forcing staff to manually chase down documents`)
+  // If we don't have specific pain points, create INDUSTRY-SPECIFIC ones (not generic invoices/HR)
+  if (!hasSpecificPainPoints) {
+    // Create pain points based on their ACTUAL industry and services
+    if (industry === 'Energy' || industry === 'Utilities' || businessContext.mainServices.some(s => s.toLowerCase().includes('energy') || s.toLowerCase().includes('power') || s.toLowerCase().includes('grid'))) {
+      painPoints.push(`${name} coordinates complex energy operations across multiple regions, likely managing vast amounts of operational data, compliance reports, and coordination documents manually`)
+      painPoints.push(`Real-time grid management and forecasting at ${name} generates continuous documentation flows—outage reports, capacity planning documents, regulatory filings—that require rapid routing and approval`)
+      painPoints.push(`With interconnected operations spanning multiple states and utilities, ${name} needs seamless document sharing and workflow coordination to maintain grid reliability and regulatory compliance`)
+      solutions.push(`Epicor ECM centralizes ${name}'s operational documents—from grid status reports to regulatory compliance filings—enabling instant access across regions with role-based security and audit trails`)
+      solutions.push(`Automated workflow routing ensures ${name}'s critical operational documents move through approval chains without delays, maintaining the rapid response times essential for grid management`)
+      console.log(`   ✓ Generated energy/utilities industry-specific pain points`)
+    } else if (industry === 'Government' || industry === 'Public Sector' || businessContext.mainServices.some(s => s.toLowerCase().includes('government') || s.toLowerCase().includes('public'))) {
+      painPoints.push(`${name} manages extensive documentation requirements across multiple departments and jurisdictions, with strict compliance and public records obligations`)
+      painPoints.push(`Public records requests and FOIA compliance at ${name} require tracking documents across departments—time-consuming manual searches strain resources and delay responses`)
+      painPoints.push(`Multi-level approval processes and complex retention requirements mean ${name}'s staff spend significant time managing document workflows instead of mission-critical work`)
+      solutions.push(`Epicor ECM provides ${name} with centralized document management and automated retention policies that ensure compliance while reducing administrative burden`)
+      solutions.push(`Automated workflow routing and complete audit trails help ${name} respond to public records requests quickly while maintaining transparency and accountability`)
+      console.log(`   ✓ Generated government/public sector-specific pain points`)
+    } else if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
+      // Only use invoice pain points if finance is detected
+      painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
+      painPoints.push(`Paper invoices arriving via email, fax, and mail make it nearly impossible to track approval status or prevent duplicate payments—forcing staff to manually chase down documents`)
 
-    solutions.push(`Epicor IDC automatically captures invoice data from any format (paper, email, PDF) and intelligently routes them through approval workflows—eliminating 90% of manual data entry`)
-    solutions.push(`Gain instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that help organizations reduce AP processing time by up to 75%`)
+      solutions.push(`Epicor IDC automatically captures invoice data from any format (paper, email, PDF) and intelligently routes them through approval workflows—eliminating 90% of manual data entry`)
+      solutions.push(`Gain instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that help organizations reduce AP processing time by up to 75%`)
+      console.log(`   ✓ Generated finance/AP-specific pain points`)
+    } else {
+      // Ultimate fallback for any other industry - document management focus
+      painPoints.push(`${name}'s operations generate significant documentation that requires coordination across teams—manual processes create bottlenecks and limit operational visibility`)
+      painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
+      solutions.push(`Epicor ECM provides ${name} with a single, cloud-accessible repository for all operational documents—searchable in seconds with role-based security and automatic version control`)
+      console.log(`   ✓ Generated general operational pain points`)
+    }
   }
 
-  // Order Processing - detailed outcomes (ONLY if needed)
-  if (!hasSpecificPainPoints && businessContext.keyOperations.includes('Order Management')) {
+  // Additional pain point for order-heavy operations (if detected)
+  if (businessContext.keyOperations.includes('Order Management') && painPoints.length < 4) {
     painPoints.push(`Manual sales order entry at ${name} creates delays between order receipt and fulfillment, directly impacting customer satisfaction and your order-to-cash cycle`)
-
     solutions.push(`Epicor IDC intelligently captures order data from any source (email, EDI, fax), validates against business rules, and auto-populates your ERP—reducing order processing time by 96%`)
-  }
-
-  // Document Management - universal but specific (ONLY if needed)
-  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('Document Management') || businessContext.painPoints.includes('Paper-based workflows causing inefficiencies'))) {
-    painPoints.push(`${name}'s teams waste valuable hours searching for documents across email, shared drives, and filing cabinets—time that should be spent on strategic work that drives growth`)
-    painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
-
-    solutions.push(`Epicor ECM provides a single, cloud-accessible repository where ${name}'s team can find any document in seconds with powerful search, role-based security, and automatic version control`)
-    solutions.push(`Built-in workflow automation routes documents through approval processes automatically, with retention policies and complete audit trails turning compliance from a burden into a simple checkbox`)
-  }
-
-  // HR/Payroll - detailed specifics (ONLY if needed)
-  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('HR/Payroll') || businessContext.departments.includes('HR'))) {
-    painPoints.push(`${name}'s HR team is buried in paperwork—I-9 forms, benefits enrollments, performance reviews, PTO requests—consuming hours better spent on talent development and employee engagement`)
-
-    solutions.push(`Mosaic digitizes ${name}'s entire employee lifecycle with secure document storage, automated workflows, and self-service portals—organizations process 2,000+ HR documents daily with ROI under 18 months`)
-  }
-
-  // Compliance - specific capabilities (ONLY if needed)
-  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('Compliance/Regulatory') || industry === 'Healthcare' || industry === 'Financial Services')) {
-    painPoints.push(`Compliance audits consume weeks of ${name}'s staff time tracking down documents, reconstructing approval chains, and proving policies were followed—pulling focus from revenue-generating work`)
-
-    solutions.push(`Epicor ECM's immutable audit trail captures every document interaction—who accessed it, when changes were made, approval workflows followed—giving auditors instant proof of compliance`)
   }
 
   // ERP Integration - detailed and technology-specific
