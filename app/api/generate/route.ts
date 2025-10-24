@@ -212,49 +212,130 @@ function estimateCompanySize(pageText: string, description: string): 'small' | '
   return 'medium' // default
 }
 
-// Extract colors from website
+// Extract colors from website with improved algorithm
 async function extractColors($: cheerio.CheerioAPI, url: string): Promise<{ primary: string, secondary: string, accent: string }> {
-  const colors: string[] = []
+  const colorFrequency: Record<string, number> = {}
 
-  // Extract from inline styles
+  // Extract from inline styles (prioritize header, nav, buttons, CTAs)
+  $('header, nav, .header, .navbar, button, .btn, .cta, a[class*="button"]').each((_, elem) => {
+    const style = $(elem).attr('style') || ''
+    const bgColor = $(elem).css('background-color') || ''
+    const color = $(elem).css('color') || ''
+
+    extractColorFromText(style, colorFrequency, 3) // Higher weight for important elements
+    extractColorFromText(bgColor, colorFrequency, 3)
+    extractColorFromText(color, colorFrequency, 2)
+  })
+
+  // Extract from all elements with styles
   $('[style]').each((_, elem) => {
     const style = $(elem).attr('style') || ''
-    const colorMatches = style.match(/#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|rgb\([^)]+\)/g)
-    if (colorMatches) colors.push(...colorMatches)
+    extractColorFromText(style, colorFrequency, 1)
   })
 
-  // Extract from style tags
+  // Extract from style tags (look for common CSS patterns)
   $('style').each((_, elem) => {
     const css = $(elem).html() || ''
-    const colorMatches = css.match(/#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|rgb\([^)]+\)/g)
-    if (colorMatches) colors.push(...colorMatches)
-  })
 
-  // Convert to hex and filter
-  const hexColors = colors
-    .map(color => {
-      if (color.startsWith('rgb')) {
-        const matches = color.match(/\d+/g)
-        if (matches && matches.length >= 3) {
-          return rgbToHex(parseInt(matches[0]), parseInt(matches[1]), parseInt(matches[2]))
+    // Look for primary/brand color variables and classes
+    const brandColorPatterns = [
+      /--(?:primary|brand|main|accent|theme)(?:-color)?:\s*([^;]+)/gi,
+      /\.(?:primary|brand|btn-primary|cta)[^{]*\{[^}]*background(?:-color)?:\s*([^;]+)/gi,
+      /\.(?:primary|brand|btn-primary|cta)[^{]*\{[^}]*color:\s*([^;]+)/gi
+    ]
+
+    brandColorPatterns.forEach(pattern => {
+      const matches = css.matchAll(pattern)
+      for (const match of matches) {
+        if (match[1]) {
+          extractColorFromText(match[1], colorFrequency, 5) // Very high weight for brand variables
         }
       }
-      if (color.length === 4) { // #RGB to #RRGGBB
-        return '#' + color[1] + color[1] + color[2] + color[2] + color[3] + color[3]
-      }
-      return color.toLowerCase()
     })
-    .filter((color, index, self) => self.indexOf(color) === index)
-    .filter(color => color.startsWith('#') && !isGrayscale(color))
-    .slice(0, 10)
 
-  if (hexColors.length >= 3) {
-    return { primary: hexColors[0], secondary: hexColors[1], accent: hexColors[2] }
-  } else if (hexColors.length > 0) {
-    return { primary: hexColors[0], secondary: hexColors[0], accent: hexColors[0] }
+    // Extract all colors from CSS
+    extractColorFromText(css, colorFrequency, 1)
+  })
+
+  // Extract from link tags (sometimes meta theme color is defined)
+  const themeColor = $('meta[name="theme-color"]').attr('content')
+  if (themeColor) {
+    extractColorFromText(themeColor, colorFrequency, 10) // Highest weight for explicit theme color
+  }
+
+  // Convert frequency map to sorted array
+  const sortedColors = Object.entries(colorFrequency)
+    .map(([color, freq]) => ({ color, freq }))
+    .sort((a, b) => b.freq - a.freq)
+    .map(item => item.color)
+    .filter(color => !isGrayscale(color))
+    .filter(color => !isCommonUIColor(color)) // Filter out very common UI colors like pure white/black
+
+  console.log(`🎨 Found ${sortedColors.length} brand colors:`, sortedColors.slice(0, 5))
+
+  if (sortedColors.length >= 3) {
+    return {
+      primary: sortedColors[0],
+      secondary: sortedColors[1],
+      accent: sortedColors[2]
+    }
+  } else if (sortedColors.length === 2) {
+    return {
+      primary: sortedColors[0],
+      secondary: sortedColors[1],
+      accent: sortedColors[0]
+    }
+  } else if (sortedColors.length === 1) {
+    return {
+      primary: sortedColors[0],
+      secondary: sortedColors[0],
+      accent: sortedColors[0]
+    }
   }
 
   return { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' }
+}
+
+// Helper to extract colors from text and add to frequency map
+function extractColorFromText(text: string, frequencyMap: Record<string, number>, weight: number) {
+  const colorMatches = text.match(/#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|rgba?\([^)]+\)/gi)
+  if (colorMatches) {
+    colorMatches.forEach(color => {
+      let hex = color.toLowerCase()
+
+      if (hex.startsWith('rgb')) {
+        const matches = hex.match(/\d+/g)
+        if (matches && matches.length >= 3) {
+          hex = rgbToHex(parseInt(matches[0]), parseInt(matches[1]), parseInt(matches[2]))
+        } else {
+          return
+        }
+      } else if (hex.length === 4) { // #RGB to #RRGGBB
+        hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3]
+      }
+
+      if (hex.startsWith('#') && hex.length === 7) {
+        frequencyMap[hex] = (frequencyMap[hex] || 0) + weight
+      }
+    })
+  }
+}
+
+// Filter out very common UI colors (pure white, pure black, very light grays)
+function isCommonUIColor(hex: string): boolean {
+  if (!hex.startsWith('#') || hex.length !== 7) return false
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+
+  // Pure white or very close to white
+  if (r > 250 && g > 250 && b > 250) return true
+  // Pure black or very close to black
+  if (r < 10 && g < 10 && b < 10) return true
+  // Very light grays
+  if (Math.abs(r - g) < 10 && Math.abs(g - b) < 10 && r > 240) return true
+
+  return false
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
