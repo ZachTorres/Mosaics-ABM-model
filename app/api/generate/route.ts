@@ -320,12 +320,27 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
   paragraphs.forEach(para => {
     const paraLower = para.toLowerCase()
 
-    // Extract explicit challenges they mention (what their customers struggle with)
+    // Extract explicit challenges - INDUSTRY-AGNOSTIC patterns
     const challengePatterns = [
-      /(?:challenges?|problems?|issues?|struggles?|difficulties?|pain points?)[:\s]+([^.!?]{20,200})/gi,
-      /(?:struggling with|dealing with|facing|encountering)[:\s]+([^.!?]{20,150})/gi,
-      /without\s+(?:our|a|the)\s+(?:solution|platform|system|service)[,\s]+([^.!?]{20,150})/gi,
-      /(?:inefficient|manual|time-consuming|costly|complex|difficult)\s+([^.!?]{15,120})/gi
+      // Direct challenge/problem mentions
+      /(?:challenges?|problems?|issues?|struggles?|difficulties?)[:\s]+([^.!?]{20,200})/gi,
+      /(?:struggling|dealing|grappling)\s+with\s+([^.!?]{20,150})/gi,
+
+      // Without/lack patterns
+      /without\s+([a-z\s]{10,100})/gi,
+      /(?:lack(?:ing)?|absence|missing)\s+(?:of\s+)?([a-z\s]{10,100}(?:visibility|control|coordination|insight|integration|transparency|efficiency|automation))/gi,
+
+      // Need/require improvements
+      /(?:need|require|must)\s+(?:better|improved|more|enhanced)\s+([^.!?]{15,120})/gi,
+
+      // Negative descriptors + ANY process/system
+      /(?:inefficient|outdated|manual|fragmented|disconnected|siloed|time-consuming|complex|difficult)\s+([a-z\s]{8,100})/gi,
+
+      // Managing/coordinating challenges
+      /(?:coordinating|managing|handling|tracking|monitoring|forecasting|planning)\s+([^,.]{15,120}(?:across|between|among|throughout))/gi,
+
+      // Difficulty/challenge doing something
+      /(?:difficult|challenging|hard)\s+to\s+([^.!?]{15,120})/gi
     ]
 
     challengePatterns.forEach(pattern => {
@@ -333,12 +348,10 @@ function analyzeBusinessContext(pageText: string, headings: string, description:
       for (const match of matches) {
         if (match[1]) {
           const challenge = match[1].trim()
-          // Only include if it seems like a real business problem
-          if (challenge.includes('process') || challenge.includes('workflow') ||
-              challenge.includes('manual') || challenge.includes('data') ||
-              challenge.includes('document') || challenge.includes('invoice') ||
-              challenge.includes('order') || challenge.includes('track') ||
-              challenge.includes('manage') || challenge.includes('time')) {
+          // More flexible filtering - accept if it mentions ANY operational concept
+          if (challenge.length > 12 && challenge.length < 200 &&
+              (challenge.match(/(?:process|workflow|system|data|information|document|report|track|manage|coordinate|plan|schedule|forecast|monitor|operation|supply|communicat|collaborat|visibilit|integrat|automat)/) ||
+               challenge.split(' ').length >= 3)) {  // Or if it's a multi-word phrase
             explicitChallenges.push(challenge)
           }
         }
@@ -918,8 +931,12 @@ function generateMosaicSolution(companyData: CompanyData) {
   const hasSageTech = businessContext.technologies.some(t => t.includes('sage') || t.includes('intacct'))
   const hasOtherERP = businessContext.technologies.some(t => t.includes('netsuite') || t.includes('erp'))
 
-  // AP/Invoice Processing - detailed and specific (ONLY if not already covered above)
-  if (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING')) {
+  // ONLY add generic pain points if we don't have enough specific ones from deep analysis
+  const hasSpecificPainPoints = painPoints.length >= 3
+  console.log(`   ${hasSpecificPainPoints ? '✓ Have specific pain points, skipping generics' : '⚠ Need more pain points, adding targeted generics'}`)
+
+  // AP/Invoice Processing - detailed and specific (ONLY if needed)
+  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('Invoice Processing') || businessContext.departments.includes('FINANCE') || businessContext.departments.includes('ACCOUNTING'))) {
     painPoints.push(`${name} is likely processing hundreds of invoices monthly through manual data entry, creating payment delays, bottlenecks, and errors that frustrate AP teams and strain vendor relationships`)
     painPoints.push(`Paper invoices arriving via email, fax, and mail make it nearly impossible to track approval status or prevent duplicate payments—forcing staff to manually chase down documents`)
 
@@ -927,15 +944,15 @@ function generateMosaicSolution(companyData: CompanyData) {
     solutions.push(`Gain instant visibility into every invoice's status with Epicor ECM's centralized repository, complete with automated GL coding and audit trails that help organizations reduce AP processing time by up to 75%`)
   }
 
-  // Order Processing - detailed outcomes
-  if (businessContext.keyOperations.includes('Order Management')) {
+  // Order Processing - detailed outcomes (ONLY if needed)
+  if (!hasSpecificPainPoints && businessContext.keyOperations.includes('Order Management')) {
     painPoints.push(`Manual sales order entry at ${name} creates delays between order receipt and fulfillment, directly impacting customer satisfaction and your order-to-cash cycle`)
 
     solutions.push(`Epicor IDC intelligently captures order data from any source (email, EDI, fax), validates against business rules, and auto-populates your ERP—reducing order processing time by 96%`)
   }
 
-  // Document Management - universal but specific
-  if (businessContext.keyOperations.includes('Document Management') || businessContext.painPoints.includes('Paper-based workflows causing inefficiencies')) {
+  // Document Management - universal but specific (ONLY if needed)
+  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('Document Management') || businessContext.painPoints.includes('Paper-based workflows causing inefficiencies'))) {
     painPoints.push(`${name}'s teams waste valuable hours searching for documents across email, shared drives, and filing cabinets—time that should be spent on strategic work that drives growth`)
     painPoints.push(`Without centralized document control, ${name} faces risks from lost files, unclear version history, and difficulty proving compliance during audits`)
 
@@ -943,15 +960,15 @@ function generateMosaicSolution(companyData: CompanyData) {
     solutions.push(`Built-in workflow automation routes documents through approval processes automatically, with retention policies and complete audit trails turning compliance from a burden into a simple checkbox`)
   }
 
-  // HR/Payroll - detailed specifics
-  if (businessContext.keyOperations.includes('HR/Payroll') || businessContext.departments.includes('HR')) {
+  // HR/Payroll - detailed specifics (ONLY if needed)
+  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('HR/Payroll') || businessContext.departments.includes('HR'))) {
     painPoints.push(`${name}'s HR team is buried in paperwork—I-9 forms, benefits enrollments, performance reviews, PTO requests—consuming hours better spent on talent development and employee engagement`)
 
     solutions.push(`Mosaic digitizes ${name}'s entire employee lifecycle with secure document storage, automated workflows, and self-service portals—organizations process 2,000+ HR documents daily with ROI under 18 months`)
   }
 
-  // Compliance - specific capabilities
-  if (businessContext.keyOperations.includes('Compliance/Regulatory') || industry === 'Healthcare' || industry === 'Financial Services') {
+  // Compliance - specific capabilities (ONLY if needed)
+  if (!hasSpecificPainPoints && (businessContext.keyOperations.includes('Compliance/Regulatory') || industry === 'Healthcare' || industry === 'Financial Services')) {
     painPoints.push(`Compliance audits consume weeks of ${name}'s staff time tracking down documents, reconstructing approval chains, and proving policies were followed—pulling focus from revenue-generating work`)
 
     solutions.push(`Epicor ECM's immutable audit trail captures every document interaction—who accessed it, when changes were made, approval workflows followed—giving auditors instant proof of compliance`)
