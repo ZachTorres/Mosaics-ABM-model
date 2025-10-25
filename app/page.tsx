@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import MicrositeView from '@/components/MicrositeView'
+import { searchCompanies, type Company } from '@/lib/companyDatabase'
 
 interface MicrositeData {
   companyName: string
@@ -34,6 +35,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [microsite, setMicrosite] = useState<MicrositeData | null>(null)
   const [error, setError] = useState('')
+
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<Company[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Save/Share state
   const [saving, setSaving] = useState(false)

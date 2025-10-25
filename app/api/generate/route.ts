@@ -58,11 +58,22 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
     // PHASE 2: EXTRACT COMPANY NAME WITH VERIFICATION
     console.log(`\n📋 Phase 2: Company Name Extraction & Verification`)
 
+    // Try multiple sources for company name
     let companyName =
       $('meta[property="og:site_name"]').attr('content') ||
       $('meta[name="application-name"]').attr('content') ||
-      $('title').text().split('|')[0].split('-')[0].trim() ||
-      extractCompanyNameFromUrl(url)
+      $('title').text().split('|')[0].split('-')[0].trim()
+
+    // VALIDATE: Check if we got an error message instead of a real name
+    const errorPhrases = ['blocked', 'access denied', 'forbidden', 'error', 'not found', '403', '404', 'cloudflare']
+    const seemsLikeError = errorPhrases.some(phrase => companyName.toLowerCase().includes(phrase))
+
+    if (!companyName || seemsLikeError || companyName.length < 2) {
+      console.log(`   ⚠️ Extracted name seems invalid: "${companyName}"`)
+      console.log(`   ✓ Using URL-based name extraction as fallback`)
+      companyName = extractCompanyNameFromUrl(url)
+    }
+
     companyName = companyName.replace(/\.(com|net|org|io|co|ai|app|dev)$/i, '').trim()
 
     // Extract description
@@ -1070,8 +1081,68 @@ function isGrayscale(hex: string): boolean {
 function extractCompanyNameFromUrl(url: string): string {
   try {
     const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0]
-    const name = domain.split('.')[0]
-    return name.charAt(0).toUpperCase() + name.slice(1)
+    const namePart = domain.split('.')[0].toLowerCase()
+
+    // Well-known company name mappings (domain -> proper name)
+    const knownCompanies: Record<string, string> = {
+      'microsoft': 'Microsoft',
+      'google': 'Google',
+      'apple': 'Apple',
+      'amazon': 'Amazon',
+      'meta': 'Meta',
+      'facebook': 'Facebook',
+      'netflix': 'Netflix',
+      'tesla': 'Tesla',
+      'nvidia': 'NVIDIA',
+      'intel': 'Intel',
+      'adobe': 'Adobe',
+      'salesforce': 'Salesforce',
+      'oracle': 'Oracle',
+      'ibm': 'IBM',
+      'cisco': 'Cisco',
+      'sap': 'SAP',
+      'vmware': 'VMware',
+      'dell': 'Dell',
+      'hp': 'HP',
+      'lenovo': 'Lenovo',
+      'walmart': 'Walmart',
+      'target': 'Target',
+      'costco': 'Costco',
+      'homedepot': 'The Home Depot',
+      'lowes': "Lowe's",
+      'bestbuy': 'Best Buy',
+      'nike': 'Nike',
+      'adidas': 'Adidas',
+      'cocacola': 'Coca-Cola',
+      'coke': 'Coca-Cola',
+      'pepsi': 'PepsiCo',
+      'starbucks': 'Starbucks',
+      'mcdonalds': "McDonald's",
+      'ups': 'UPS',
+      'fedex': 'FedEx',
+      'boeing': 'Boeing',
+      'ge': 'General Electric',
+      'jpmorgan': 'JPMorgan Chase',
+      'chase': 'Chase',
+      'wellsfargo': 'Wells Fargo',
+      'bankofamerica': 'Bank of America',
+      'bofa': 'Bank of America',
+      'citigroup': 'Citigroup',
+      'goldmansachs': 'Goldman Sachs',
+      'morganstanley': 'Morgan Stanley',
+      'paypal': 'PayPal',
+      'visa': 'Visa',
+      'mastercard': 'Mastercard',
+      'amex': 'American Express'
+    }
+
+    // Check if this is a well-known company
+    if (knownCompanies[namePart]) {
+      return knownCompanies[namePart]
+    }
+
+    // Otherwise, capitalize first letter
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1)
   } catch {
     return 'Company'
   }
