@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { getRelevantCustomers, getCompanyInitial, type Customer } from '@/lib/customerLogos'
 
 interface MicrositeData {
   companyName: string
@@ -18,6 +19,8 @@ interface MicrositeData {
     accent: string
   }
   logoUrl?: string
+  companySize?: 'small' | 'medium' | 'large' | 'enterprise'
+  location?: string
 }
 
 interface ContactFormData {
@@ -45,6 +48,14 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
   const [submitting, setSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState('')
+
+  // Get relevant customer logos based on location and industry
+  const relevantCustomers = getRelevantCustomers(
+    microsite.industry,
+    microsite.companySize || 'large',
+    microsite.location,
+    6
+  )
 
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -175,6 +186,55 @@ export default function MicrositeView({ microsite, showContactForm = true, onCon
             </div>
           </div>
 
+          {/* Social Proof - Customer Logos */}
+          <div className="py-16 border-t border-gray-200">
+            <div className="text-center mb-12">
+              <p className="text-sm uppercase tracking-wider text-gray-500 font-semibold mb-8">
+                Trusted by Industry Leaders
+              </p>
+              <h3 className="text-2xl font-light text-gray-800 mb-3">
+                Companies Like {microsite.companyName} Partner With Mosaic
+              </h3>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Join leading organizations that have transformed their document workflows with Epicor ECM
+              </p>
+            </div>
+
+            {/* Logo Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {relevantCustomers.map((customer, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-center p-6 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all group"
+                >
+                  <div className="text-center">
+                    {/* Company Initial/Monogram */}
+                    <div
+                      className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center text-white font-bold text-xl transition-transform group-hover:scale-110"
+                      style={{
+                        background: `linear-gradient(135deg, ${microsite.colors.primary} 0%, ${microsite.colors.secondary} 100%)`
+                      }}
+                    >
+                      {getCompanyInitial(customer.name)}
+                    </div>
+                    <div className="font-semibold text-gray-800 text-sm mb-1">
+                      {customer.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {customer.location}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Optional: Add a subtle note about location matching */}
+            {microsite.location && (
+              <p className="text-center text-xs text-gray-500 mt-8">
+                Companies in {microsite.location} and the {relevantCustomers[0]?.region || 'region'}
+              </p>
+            )}
+          </div>
 
           {/* Book a Demo CTA */}
           {showContactForm && (
