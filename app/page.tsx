@@ -151,8 +151,8 @@ export default function Home() {
     setUrl(value)
     setError('')
 
-    // Search for companies matching input
-    if (value.trim().length >= 2) {
+    // Search for companies matching input (even single characters)
+    if (value.trim().length >= 1) {
       const results = searchCompanies(value.trim())
       setSuggestions(results)
       setShowSuggestions(results.length > 0)
@@ -235,9 +235,9 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Input Section with blue accent */}
+        {/* Input Section with blue accent - overflow-visible allows dropdown to extend outside */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="bg-white rounded-xl shadow-xl border border-blue-200 p-10">
+          <div className="bg-white rounded-xl shadow-xl border border-blue-200 p-10 overflow-visible">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                 Enter Your Prospect's Website
@@ -260,11 +260,11 @@ export default function Home() {
                   autoComplete="off"
                 />
 
-                {/* Autocomplete Dropdown */}
+                {/* Autocomplete Dropdown - Fixed positioning to prevent layout shift */}
                 {showSuggestions && suggestions.length > 0 && (
                   <div
                     ref={dropdownRef}
-                    className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl max-h-96 overflow-y-auto"
+                    className="absolute top-full left-0 right-0 z-50 mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl max-h-96 overflow-y-auto"
                   >
                     {suggestions.map((company, index) => (
                       <button
