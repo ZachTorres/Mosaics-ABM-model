@@ -145,6 +145,72 @@ export default function Home() {
     }
   }
 
+  // Autocomplete handlers
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setUrl(value)
+    setError('')
+
+    // Search for companies matching input
+    if (value.trim().length >= 2) {
+      const results = searchCompanies(value.trim())
+      setSuggestions(results)
+      setShowSuggestions(results.length > 0)
+      setSelectedIndex(-1)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }
+
+  const handleSelectSuggestion = (company: Company) => {
+    // Add https:// prefix if not present
+    const fullUrl = company.domain.startsWith('http') ? company.domain : `https://${company.domain}`
+    setUrl(fullUrl)
+    setSuggestions([])
+    setShowSuggestions(false)
+    setSelectedIndex(-1)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+        handleSelectSuggestion(suggestions[selectedIndex])
+      } else {
+        handleGenerate()
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false)
+      setSelectedIndex(-1)
+    }
+  }
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero section with blue theme */}
@@ -181,15 +247,52 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-col md:flex-row gap-4">
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-                placeholder="e.g., apple.com or https://www.tesla.com"
-                className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg transition-all"
-                disabled={loading}
-              />
+              <div className="flex-1 relative">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={url}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="e.g., apple, microsoft, or tesla.com"
+                  className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg transition-all"
+                  disabled={loading}
+                  autoComplete="off"
+                />
+
+                {/* Autocomplete Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-2xl max-h-96 overflow-y-auto"
+                  >
+                    {suggestions.map((company, index) => (
+                      <button
+                        key={`${company.domain}-${index}`}
+                        onClick={() => handleSelectSuggestion(company)}
+                        className={`w-full px-6 py-4 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+                          index === selectedIndex ? 'bg-blue-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 text-lg">
+                              {company.name}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {company.domain}
+                            </div>
+                          </div>
+                          <div className="ml-4 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                            {company.industry}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={handleGenerate}
                 disabled={loading}
