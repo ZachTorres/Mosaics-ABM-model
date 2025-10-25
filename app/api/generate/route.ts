@@ -156,16 +156,31 @@ async function deepScrapeCompany(url: string): Promise<CompanyData> {
 async function scrapePage(url: string) {
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'DNT': '1',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1'
     },
-    signal: AbortSignal.timeout(5000) // 5 second timeout per page
+    signal: AbortSignal.timeout(8000) // Increased to 8 second timeout
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}`)
+    const statusText = response.statusText || 'Unknown error'
+    console.log(`   ⚠️ HTTP ${response.status}: ${statusText} for ${url}`)
+    throw new Error(`HTTP ${response.status}: ${statusText}`)
   }
 
   const html = await response.text()
+
+  // Check if we got blocked (common patterns)
+  if (html.includes('Access Denied') || html.includes('Blocked') || html.includes('Captcha') || html.length < 500) {
+    console.log(`   🚫 Possible bot detection for ${url}`)
+    throw new Error('Possible bot detection - page blocked or minimal content')
+  }
+
   const $ = cheerio.load(html)
 
   // Remove script, style, and nav elements
@@ -1063,14 +1078,42 @@ function extractCompanyNameFromUrl(url: string): string {
 }
 
 function getFallbackData(url: string): CompanyData {
+  console.log(`\n⚠️ Using FALLBACK data for ${url}`)
+  console.log(`   Reason: Website blocked scraping or encountered errors`)
+
+  const companyName = extractCompanyNameFromUrl(url)
+  const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('.')[0].toLowerCase()
+
+  // Check if this is a well-known company in our brand database
+  const knownBrandColors = BRAND_COLORS[domain] || BRAND_COLORS[companyName.toLowerCase()]
+
+  // Check if it's a known tech giant (use Technology industry)
+  const techGiants = ['apple', 'microsoft', 'google', 'amazon', 'meta', 'facebook', 'tesla', 'nvidia', 'intel', 'amd', 'oracle', 'salesforce', 'adobe', 'ibm', 'cisco', 'dell', 'hp', 'lenovo']
+  const isKnownTechGiant = techGiants.some(giant => domain.includes(giant) || companyName.toLowerCase().includes(giant))
+
+  let industry = 'Business Services'
+  let size: 'small' | 'medium' | 'large' | 'enterprise' = 'medium'
+
+  if (isKnownTechGiant) {
+    industry = 'Technology'
+    size = 'enterprise'
+    console.log(`   ✓ Recognized as Tech Giant: ${companyName}`)
+  }
+
+  const colors = knownBrandColors || { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' }
+
+  if (knownBrandColors) {
+    console.log(`   ✓ Using known brand colors for ${companyName}`)
+  }
+
   return {
-    name: extractCompanyNameFromUrl(url),
+    name: companyName,
     url,
-    industry: 'Business Services',
-    description: 'A leading company in their industry',
-    colors: { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' },
+    industry,
+    description: `${companyName} is a leading company in the ${industry.toLowerCase()} industry`,
+    colors,
     businessContext: {
-      mainServices: ['Business Services'],
+      mainServices: [industry],
       keyOperations: ['Document Management'],
       painPoints: ['Manual workflow inefficiencies'],
       departments: [],
@@ -1083,7 +1126,7 @@ function getFallbackData(url: string): CompanyData {
       specificWorkflows: [],
       problemsTheySolve: []
     },
-    size: 'medium'
+    size
   }
 }
 
