@@ -1158,17 +1158,98 @@ function getFallbackData(url: string): CompanyData {
   // Check if this is a well-known company in our brand database
   const knownBrandColors = BRAND_COLORS[domain] || BRAND_COLORS[companyName.toLowerCase()]
 
-  // Check if it's a known tech giant (use Technology industry)
-  const techGiants = ['apple', 'microsoft', 'google', 'amazon', 'meta', 'facebook', 'tesla', 'nvidia', 'intel', 'amd', 'oracle', 'salesforce', 'adobe', 'ibm', 'cisco', 'dell', 'hp', 'lenovo']
-  const isKnownTechGiant = techGiants.some(giant => domain.includes(giant) || companyName.toLowerCase().includes(giant))
+  console.log(`   🔍 Smart industry detection from URL patterns...`)
 
+  // COMPREHENSIVE INDUSTRY DETECTION based on domain keywords and known companies
   let industry = 'Business Services'
   let size: 'small' | 'medium' | 'large' | 'enterprise' = 'medium'
+  let keyOperations: string[] = []
+  let mainServices: string[] = []
 
-  if (isKnownTechGiant) {
+  const domainLower = domain.toLowerCase()
+  const urlLower = url.toLowerCase()
+
+  // Technology companies
+  const techIndicators = ['tech', 'soft', 'cloud', 'digital', 'cyber', 'data', 'ai', 'saas', 'app', 'platform']
+  const techGiants = ['apple', 'microsoft', 'google', 'amazon', 'meta', 'facebook', 'tesla', 'nvidia', 'intel', 'amd', 'oracle', 'salesforce', 'adobe', 'ibm', 'cisco', 'dell', 'hp', 'lenovo', 'vmware', 'sap']
+  if (techGiants.some(g => domainLower.includes(g)) || techIndicators.some(t => domainLower.includes(t))) {
     industry = 'Technology'
+    size = techGiants.some(g => domainLower.includes(g)) ? 'enterprise' : 'large'
+    mainServices = ['Software/SaaS', 'Technology']
+    keyOperations = ['Document Management']
+    console.log(`   ✓ Detected: Technology company`)
+  }
+
+  // Retail companies
+  const retailIndicators = ['shop', 'store', 'retail', 'mart', 'market']
+  const retailGiants = ['walmart', 'target', 'costco', 'amazon', 'bestbuy', 'homedepot', 'lowes', 'kroger', 'walgreens', 'cvs']
+  if (retailGiants.some(r => domainLower.includes(r)) || retailIndicators.some(r => domainLower.includes(r))) {
+    industry = 'Retail'
+    size = retailGiants.some(r => domainLower.includes(r)) ? 'enterprise' : 'large'
+    mainServices = ['Retail/E-commerce']
+    keyOperations = ['Order Management', 'Document Management']
+    console.log(`   ✓ Detected: Retail company`)
+  }
+
+  // Financial services
+  const financeIndicators = ['bank', 'finance', 'capital', 'invest', 'insurance', 'credit', 'loan']
+  const financeGiants = ['chase', 'wellsfargo', 'bankofamerica', 'bofa', 'citi', 'jpmorgan', 'goldmansachs', 'morganstanley', 'visa', 'mastercard', 'amex', 'paypal']
+  if (financeGiants.some(f => domainLower.includes(f)) || financeIndicators.some(f => domainLower.includes(f))) {
+    industry = 'Financial Services'
     size = 'enterprise'
-    console.log(`   ✓ Recognized as Tech Giant: ${companyName}`)
+    mainServices = ['Financial Services']
+    keyOperations = ['Invoice Processing', 'Document Management', 'Compliance/Regulatory']
+    console.log(`   ✓ Detected: Financial Services company`)
+  }
+
+  // Healthcare
+  const healthIndicators = ['health', 'medical', 'hospital', 'clinic', 'pharma', 'care']
+  if (healthIndicators.some(h => domainLower.includes(h))) {
+    industry = 'Healthcare'
+    size = 'large'
+    mainServices = ['Healthcare Services']
+    keyOperations = ['Document Management', 'Compliance/Regulatory', 'HR/Payroll']
+    console.log(`   ✓ Detected: Healthcare organization`)
+  }
+
+  // Manufacturing
+  const mfgIndicators = ['mfg', 'manufacturing', 'industrial', 'factory', 'production']
+  const mfgGiants = ['boeing', 'ge', 'ford', 'gm', 'toyota', 'honda', 'tesla', '3m', 'caterpillar']
+  if (mfgGiants.some(m => domainLower.includes(m)) || mfgIndicators.some(m => domainLower.includes(m))) {
+    industry = 'Manufacturing'
+    size = mfgGiants.some(m => domainLower.includes(m)) ? 'enterprise' : 'large'
+    mainServices = ['Manufacturing']
+    keyOperations = ['Order Management', 'Document Management', 'Invoice Processing']
+    console.log(`   ✓ Detected: Manufacturing company`)
+  }
+
+  // Energy & Utilities
+  const energyIndicators = ['energy', 'power', 'electric', 'utility', 'util', 'gas', 'oil', 'grid']
+  if (energyIndicators.some(e => domainLower.includes(e)) || (urlLower.endsWith('.org') && energyIndicators.some(e => domainLower.includes(e)))) {
+    industry = 'Energy'
+    size = 'enterprise'
+    mainServices = ['Energy/Utilities']
+    keyOperations = ['Document Management', 'Compliance/Regulatory']
+    console.log(`   ✓ Detected: Energy/Utilities company`)
+  }
+
+  // Government/Public Sector
+  if (urlLower.endsWith('.gov') || domainLower.includes('gov')) {
+    industry = 'Government'
+    size = 'large'
+    mainServices = ['Government/Public Sector']
+    keyOperations = ['Document Management', 'Compliance/Regulatory']
+    console.log(`   ✓ Detected: Government/Public Sector`)
+  }
+
+  // Education
+  const eduIndicators = ['edu', 'university', 'college', 'school', 'academy', 'learning']
+  if (urlLower.endsWith('.edu') || eduIndicators.some(e => domainLower.includes(e))) {
+    industry = 'Education'
+    size = 'large'
+    mainServices = ['Education']
+    keyOperations = ['Document Management', 'HR/Payroll']
+    console.log(`   ✓ Detected: Education institution`)
   }
 
   const colors = knownBrandColors || { primary: '#2563eb', secondary: '#4f46e5', accent: '#3b82f6' }
@@ -1184,8 +1265,8 @@ function getFallbackData(url: string): CompanyData {
     description: `${companyName} is a leading company in the ${industry.toLowerCase()} industry`,
     colors,
     businessContext: {
-      mainServices: [industry],
-      keyOperations: ['Document Management'],
+      mainServices: mainServices.length > 0 ? mainServices : [industry],
+      keyOperations: keyOperations.length > 0 ? keyOperations : ['Document Management'],
       painPoints: ['Manual workflow inefficiencies'],
       departments: [],
       contentThemes: ['efficiency'],
