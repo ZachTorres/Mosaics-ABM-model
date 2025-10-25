@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "import-apollo": "npx ts-node scripts/import-apollo-companies.ts"
+    "import-apollo": "node scripts/import-apollo-companies.js"
   },
   "dependencies": {
     "next": "14.2.23",
